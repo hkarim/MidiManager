@@ -1,7 +1,7 @@
 MidiManager
 ===========
 
-MidiManager is a VST plugin that allows you to right scipts using [Pure programming language] (http://purelang.bitbucket.org/). The
+MidiManager is a VST plugin that allows you to write scripts using [Pure programming language] (http://purelang.bitbucket.org/). The
 plugin is written using [Juce Framework] (http://www.juce.com/). MidiManager is currenlty only available for Mac OS X. The plugin requires
 Pure installed on your system, which can be simply installed using brew:
 
