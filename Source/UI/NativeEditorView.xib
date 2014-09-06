@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6206.9" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6206.9"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="NativeEditorController">
+            <connections>
+                <outlet property="view" destination="c22-O7-iKe" id="GMs-kT-naH"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="c22-O7-iKe">
+            <rect key="frame" x="0.0" y="0.0" width="650" height="300"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8dd-xG-ds0">
+                    <rect key="frame" x="184" y="256" width="283" height="24"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Pure MIDI Scripting Environment" id="pW9-Ug-vnM">
+                        <font key="font" size="20" name="HelveticaNeue-Light"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iVs-BM-O3s">
+                    <rect key="frame" x="18" y="212" width="614" height="17"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="No Script Loaded" id="G6G-Dq-PpA">
+                        <font key="font" size="13" name="LucidaGrande-Bold"/>
+                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                    <connections>
+                        <binding destination="-2" name="value" keyPath="self.loadedFileName" id="gbN-C5-fiB"/>
+                    </connections>
+                </textField>
+                <box autoresizesSubviews="NO" verticalHuggingPriority="750" fixedFrame="YES" title="Box" boxType="separator" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="Nmo-fb-lBI">
+                    <rect key="frame" x="20" y="170" width="610" height="5"/>
+                    <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
+                    <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+                    <font key="titleFont" metaFont="system"/>
+                </box>
+                <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OSG-iy-KxK">
+                    <rect key="frame" x="20" y="20" width="610" height="144"/>
+                    <textFieldCell key="cell" selectable="YES" sendsActionOnEndEditing="YES" title="No Errors" drawsBackground="YES" id="q4o-Bp-4V7">
+                        <font key="font" metaFont="cellTitle"/>
+                        <color key="textColor" red="1" green="0.95294117649999999" blue="0.84313725490000002" alpha="1" colorSpace="calibratedRGB"/>
+                        <color key="backgroundColor" red="0.0078431372550000003" green="0.1137254902" blue="0.1333333333" alpha="1" colorSpace="calibratedRGB"/>
+                    </textFieldCell>
+                    <connections>
+                        <binding destination="-2" name="value" keyPath="self.errors" id="mse-XC-Wk0"/>
+                    </connections>
+                </textField>
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LGH-Oq-Cxg">
+                    <rect key="frame" x="20" y="180" width="117" height="19"/>
+                    <buttonCell key="cell" type="roundRect" title="Load Pure Script" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="wKm-Hj-M5d">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="cellTitle"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="loadScriptClicked:" target="Km2-r7-VkK" id="fDV-f0-KdV"/>
+                    </connections>
+                </button>
+            </subviews>
+            <point key="canvasLocation" x="-2254" y="335"/>
+        </customView>
+        <viewController id="Km2-r7-VkK" customClass="NativeEditorController">
+            <connections>
+                <outlet property="view" destination="c22-O7-iKe" id="V5A-1K-dXG"/>
+            </connections>
+        </viewController>
+        <userDefaultsController representsSharedInstance="YES" id="P1I-dK-IR6"/>
+    </objects>
+</document>

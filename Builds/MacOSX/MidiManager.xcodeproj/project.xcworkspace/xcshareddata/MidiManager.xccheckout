@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>A5E1FEDC-9C05-4A16-82A2-5843502EECB5</string>
+	<key>IDESourceControlProjectName</key>
+	<string>MidiManager</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>4C9F0F51336150FAACA12173BEF1BCB598642EF0</key>
+		<string>https://github.com/hkarim/MidiManager.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Builds/MacOSX/MidiManager.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>4C9F0F51336150FAACA12173BEF1BCB598642EF0</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/hkarim/MidiManager.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>4C9F0F51336150FAACA12173BEF1BCB598642EF0</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>4C9F0F51336150FAACA12173BEF1BCB598642EF0</string>
+			<key>IDESourceControlWCCName</key>
+			<string>MidiManager</string>
+		</dict>
+	</array>
+</dict>
+</plist>
