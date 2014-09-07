@@ -62,7 +62,7 @@
                     </connections>
                 </button>
             </subviews>
-            <point key="canvasLocation" x="-2254" y="335"/>
+            <point key="canvasLocation" x="-2180" y="318"/>
         </customView>
         <viewController id="Km2-r7-VkK" customClass="NativeEditorController">
             <connections>

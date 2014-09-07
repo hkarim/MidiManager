@@ -1,0 +1,16 @@
+
+
+using midi;
+
+let major = [0,4,7];
+
+processMidiBuffer buf =
+  result with
+    process m = 
+      case to_note_t m of
+        (NoteOn c n v) = map (\i -> (note_on_message c (n+i) v (position m))) major;
+        (NoteOff c n)  = map (\i -> (note_off_message c (n+i) (position m))) major;
+        _              = [m];
+      end;
+    result = to_tuple_list $ catmap process $ to_message_t buf;
+  end;

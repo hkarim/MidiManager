@@ -50,7 +50,7 @@ inline bool exists (const std::string& name) {
     return (stat (name.c_str(), &buffer) == 0);
 }
 
-PureLink::PureLink(const std::string& filename) : filename { filename } {
+PureLink::PureLink(const std::string& filename, MessageBus* bus) : bus { bus }, filename { filename } {
     if (debug)
         printf("PureLink: Loading pure file: %s\n", filename.c_str());
 
@@ -267,20 +267,31 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
         //printf("ingoing: %s\n", ingoing);
         pure_expr* args[] = {list};
         if (processMidiBuffer) {
-            pure_expr* result = pure_appv(processMidiBuffer, 1, args);
-            //const char* outgoing = str(result);
-            //printf("outgoing: %s\n", outgoing);
-            //printf("returned: %s\n", str(result));
-            pure_free(list);
-            size_t resultSize;
-            pure_expr** elems;
-            if (pure_is_listv(result, &resultSize, &elems)) {
-                for (size_t i = 0; i < resultSize ; i++) {
-                    pure_expr* current = elems[i];
-                    if (createMessageFrom(current, message, position)) {
-                        output.addEvent(message, position);
+            pure_expr* exceptions = nullptr;
+            pure_expr* result = pure_appxv(processMidiBuffer, 1, args, &exceptions);
+            if (exceptions) {
+                errors = str(exceptions);
+                Event e;
+                e.uiEvent = UIEvent::ScriptErrors;
+                e.ScriptData.compilationErrors =
+                  "An exception (" + errors + ") has been thrown while executing your script, please debug your code";
+                bus->publish(e);
+            } else {
+                //const char* outgoing = str(result);
+                //printf("outgoing: %s\n", outgoing);
+                //printf("returned: %s\n", str(result));
+                pure_free(list);
+                size_t resultSize;
+                pure_expr** elems;
+                bool isList = pure_is_listv(result, &resultSize, &elems);
+                if (isList) {
+                    for (size_t i = 0; i < resultSize ; i++) {
+                        pure_expr* current = elems[i];
+                        if (createMessageFrom(current, message, position)) {
+                            output.addEvent(message, position);
+                        }
+                        
                     }
-                    
                 }
             }
         }

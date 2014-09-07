@@ -1,3 +1,5 @@
+.DS_Store
+
 # Compiled Object files
 *.slo
 *.lo
@@ -19,3 +21,6 @@
 *.exe
 *.out
 *.app
+
+.component
+

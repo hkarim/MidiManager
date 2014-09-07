@@ -85,7 +85,7 @@ void MidiManagerAudioProcessor::fileChosen(const Event& event) {
     
         if (pureLink) delete pureLink;
     
-        pureLink = new PureLink(filename);
+        pureLink = new PureLink(filename, bus);
         
         restoreEditorState();
     }

@@ -16,11 +16,13 @@
 #include <pure/runtime.h>
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PureEditor.h"
+#include "MessageBus.h"
 
 
 class PureLink {
 private:
     std::mutex mutex;
+    MessageBus* bus;
     pure_interp* interp = nullptr;
     pure_expr* block = nullptr;
     pure_expr* processMidiBuffer = nullptr;
@@ -38,7 +40,7 @@ private:
     
     
 public:
-    PureLink(const std::string& filename);
+    PureLink(const std::string& filename, MessageBus* bus);
     ~PureLink();
     static void callPureFinalize();
     PureEditor* getPureEditor();
