@@ -278,6 +278,7 @@
 		3CCB0C008EB960E1040B711B /* juce_ResizableEdgeComponent.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_ResizableEdgeComponent.cpp; path = ../../JuceLibraryCode/modules/juce_gui_basics/layout/juce_ResizableEdgeComponent.cpp; sourceTree = SOURCE_ROOT; };
 		3D0CF0EA19BB7A5F0086BE3A /* PureLink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PureLink.h; path = ../../Source/PureLink.h; sourceTree = "<group>"; };
 		3D0CF0EB19BB7B700086BE3A /* PureEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PureEditor.cpp; path = ../../Source/PureEditor.cpp; sourceTree = "<group>"; };
+		3D60ABE619BCF7AE00898222 /* ThreadPool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ThreadPool.h; path = ../../Source/Messaging/ThreadPool.h; sourceTree = "<group>"; };
 		3D776EC919B3007A000E1808 /* PureLink.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PureLink.cpp; path = ../../Source/PureLink.cpp; sourceTree = "<group>"; };
 		3D7D199BD278C755A6B5845E /* juce_Label.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = juce_Label.h; path = ../../JuceLibraryCode/modules/juce_gui_basics/widgets/juce_Label.h; sourceTree = SOURCE_ROOT; };
 		3DC0789C19B6239A00114325 /* JuceCocoa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JuceCocoa.h; path = ../../Source/UI/JuceCocoa.h; sourceTree = "<group>"; };
@@ -1349,6 +1350,7 @@
 			isa = PBXGroup;
 			children = (
 				3DDC94F019B76C8D006D6059 /* MessageBus.h */,
+				3D60ABE619BCF7AE00898222 /* ThreadPool.h */,
 			);
 			name = Messaging;
 			sourceTree = "<group>";

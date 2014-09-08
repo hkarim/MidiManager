@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <string>
+#include "ThreadPool.h"
 
 #ifndef __MidiManager__MessageBus__
 #define __MidiManager__MessageBus__
@@ -18,8 +19,10 @@ enum class UIEvent : unsigned int {
     EditorResized,
     EditorRepaint,
     EditorRestoreState,
+    EditorConfigured,
     FileChosen,
-    ScriptErrors
+    ScriptErrors,
+    Logging
 };
 
 struct Event {
@@ -37,6 +40,15 @@ struct Event {
     struct {
         std::string compilationErrors;
     } ScriptData ;
+    
+    struct {
+        bool debug;
+        bool silenceOnErrors;
+    } Configuration;
+    
+    struct {
+        std::string packet;
+    } MidiStream;
 };
 
 class EventListener {
@@ -49,10 +61,11 @@ public:
 class MessageBus {
 private:
     std::vector<EventListener*> listeners;
+    tp::ThreadPool pool;
     MessageBus(MessageBus const&) =delete;     // Don't Implement
     void operator=(MessageBus const&) =delete; // Don't implement
 public:
-    MessageBus() : listeners {} {}
+    MessageBus() : listeners { }, pool { 8 } { }
     void addListener(EventListener* listener) {
         //printf("adding listener: %p\n", listener);
         listeners.push_back(listener);
@@ -67,7 +80,13 @@ public:
     void publish(const Event& event) {
         //printf("publishing event, listeners size = %lu\n", listeners.size());
         for (auto l : listeners) {
-            l->onEvent(event);
+            l->onEvent(event);  
+        }
+    }
+    
+    void publishAsync(const Event& event) {
+        for (auto l : listeners) {
+            pool.enqueue([=](Event e) { l->onEvent(e); }, event);
         }
     }
     

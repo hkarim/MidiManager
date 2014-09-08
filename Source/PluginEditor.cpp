@@ -41,10 +41,8 @@ MidiManagerAudioProcessorEditor::~MidiManagerAudioProcessorEditor()
 
 void MidiManagerAudioProcessorEditor::resized() {
     //MidiManagerAudioProcessor* processor = dynamic_cast<MidiManagerAudioProcessor*>(getAudioProcessor());
-    
+    setSize(currentWidth, currentHeight);
     nsviewComponent.setBounds(0, 0, currentWidth, currentHeight);
-    
-    
 }
 
 void MidiManagerAudioProcessorEditor::onEvent(const Event& event) {

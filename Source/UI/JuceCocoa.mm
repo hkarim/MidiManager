@@ -68,6 +68,15 @@ void JuceCocoa::onEvent(const Event& event) {
                 
             }
             break;
+        
+        case UIEvent::Logging:
+            if (controller) {
+                NativeEditorController* c = (NativeEditorController*) controller;
+                if (!event.MidiStream.packet.empty()) {
+                    [c log:[NSString stringWithFormat:@"%s", event.MidiStream.packet.c_str()]];
+                }
+            }
+            break;
             
         default:
             break;

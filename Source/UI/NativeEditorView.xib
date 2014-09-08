@@ -6,63 +6,212 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NativeEditorController">
             <connections>
+                <outlet property="debugTextView" destination="K7N-o3-ahR" id="bU7-ct-Wbs"/>
                 <outlet property="view" destination="c22-O7-iKe" id="GMs-kT-naH"/>
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <customView id="c22-O7-iKe">
-            <rect key="frame" x="0.0" y="0.0" width="650" height="300"/>
+        <customView horizontalHuggingPriority="1000" verticalHuggingPriority="1000" id="c22-O7-iKe">
+            <rect key="frame" x="0.0" y="0.0" width="650" height="381"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="8dd-xG-ds0">
-                    <rect key="frame" x="184" y="256" width="283" height="24"/>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="8dd-xG-ds0">
+                    <rect key="frame" x="184" y="337" width="283" height="24"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Pure MIDI Scripting Environment" id="pW9-Ug-vnM">
                         <font key="font" size="20" name="HelveticaNeue-Light"/>
                         <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iVs-BM-O3s">
-                    <rect key="frame" x="18" y="212" width="614" height="17"/>
-                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="No Script Loaded" id="G6G-Dq-PpA">
-                        <font key="font" size="13" name="LucidaGrande-Bold"/>
-                        <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                    <connections>
-                        <binding destination="-2" name="value" keyPath="self.loadedFileName" id="gbN-C5-fiB"/>
-                    </connections>
-                </textField>
-                <box autoresizesSubviews="NO" verticalHuggingPriority="750" fixedFrame="YES" title="Box" boxType="separator" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="Nmo-fb-lBI">
-                    <rect key="frame" x="20" y="170" width="610" height="5"/>
-                    <color key="borderColor" white="0.0" alpha="0.41999999999999998" colorSpace="calibratedWhite"/>
-                    <color key="fillColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
-                    <font key="titleFont" metaFont="system"/>
-                </box>
-                <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="OSG-iy-KxK">
-                    <rect key="frame" x="20" y="20" width="610" height="144"/>
-                    <textFieldCell key="cell" selectable="YES" sendsActionOnEndEditing="YES" title="No Errors" drawsBackground="YES" id="q4o-Bp-4V7">
-                        <font key="font" metaFont="cellTitle"/>
-                        <color key="textColor" red="1" green="0.95294117649999999" blue="0.84313725490000002" alpha="1" colorSpace="calibratedRGB"/>
-                        <color key="backgroundColor" red="0.0078431372550000003" green="0.1137254902" blue="0.1333333333" alpha="1" colorSpace="calibratedRGB"/>
-                    </textFieldCell>
-                    <connections>
-                        <binding destination="-2" name="value" keyPath="self.errors" id="mse-XC-Wk0"/>
-                    </connections>
-                </textField>
-                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="LGH-Oq-Cxg">
-                    <rect key="frame" x="20" y="180" width="117" height="19"/>
-                    <buttonCell key="cell" type="roundRect" title="Load Pure Script" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="wKm-Hj-M5d">
-                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
-                        <font key="font" metaFont="cellTitle"/>
-                    </buttonCell>
-                    <connections>
-                        <action selector="loadScriptClicked:" target="Km2-r7-VkK" id="fDV-f0-KdV"/>
-                    </connections>
-                </button>
+                <tabView horizontalHuggingPriority="1000" verticalHuggingPriority="1000" translatesAutoresizingMaskIntoConstraints="NO" id="RX2-Yb-GSG">
+                    <rect key="frame" x="13" y="10" width="624" height="325"/>
+                    <font key="font" metaFont="system"/>
+                    <tabViewItems>
+                        <tabViewItem label="Script" identifier="1" id="KTR-j7-R5p" userLabel="Script">
+                            <view key="view" id="BjM-fF-10s">
+                                <rect key="frame" x="10" y="33" width="604" height="279"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="LGH-Oq-Cxg">
+                                        <rect key="frame" x="20" y="215" width="117" height="19"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="117" id="CTG-nG-SIw"/>
+                                        </constraints>
+                                        <buttonCell key="cell" type="roundRect" title="Load Pure Script" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="wKm-Hj-M5d">
+                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                            <font key="font" metaFont="cellTitle"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <action selector="loadScriptClicked:" target="Km2-r7-VkK" id="fDV-f0-KdV"/>
+                                        </connections>
+                                    </button>
+                                    <textField horizontalCompressionResistancePriority="250" translatesAutoresizingMaskIntoConstraints="NO" id="OSG-iy-KxK">
+                                        <rect key="frame" x="20" y="20" width="564" height="188"/>
+                                        <textFieldCell key="cell" selectable="YES" sendsActionOnEndEditing="YES" title="No Errors" drawsBackground="YES" id="q4o-Bp-4V7">
+                                            <font key="font" size="14" name="Menlo-Regular"/>
+                                            <color key="textColor" red="1" green="0.95294117649999999" blue="0.84313725490000002" alpha="1" colorSpace="calibratedRGB"/>
+                                            <color key="backgroundColor" red="0.0078431372550000003" green="0.1137254902" blue="0.1333333333" alpha="1" colorSpace="calibratedRGB"/>
+                                        </textFieldCell>
+                                        <connections>
+                                            <binding destination="-2" name="value" keyPath="self.errors" id="mse-XC-Wk0"/>
+                                        </connections>
+                                    </textField>
+                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="iVs-BM-O3s">
+                                        <rect key="frame" x="18" y="242" width="118" height="17"/>
+                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="No Script Loaded" id="G6G-Dq-PpA">
+                                            <font key="font" size="13" name="LucidaGrande-Bold"/>
+                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                        <connections>
+                                            <binding destination="-2" name="value" keyPath="self.loadedFileName" id="gbN-C5-fiB"/>
+                                        </connections>
+                                    </textField>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstAttribute="bottom" secondItem="OSG-iy-KxK" secondAttribute="bottom" constant="20" symbolic="YES" id="0yX-97-wei"/>
+                                    <constraint firstItem="LGH-Oq-Cxg" firstAttribute="top" secondItem="iVs-BM-O3s" secondAttribute="bottom" constant="8" symbolic="YES" id="Adn-H3-kTt"/>
+                                    <constraint firstItem="iVs-BM-O3s" firstAttribute="leading" secondItem="OSG-iy-KxK" secondAttribute="leading" id="EG5-Lq-lWy"/>
+                                    <constraint firstItem="LGH-Oq-Cxg" firstAttribute="leading" secondItem="iVs-BM-O3s" secondAttribute="leading" id="KFm-wl-UvV"/>
+                                    <constraint firstItem="OSG-iy-KxK" firstAttribute="top" secondItem="LGH-Oq-Cxg" secondAttribute="bottom" constant="8" symbolic="YES" id="OTd-IC-ISl"/>
+                                    <constraint firstAttribute="bottom" secondItem="LGH-Oq-Cxg" secondAttribute="bottom" constant="216" id="UjO-wp-Iks"/>
+                                    <constraint firstItem="iVs-BM-O3s" firstAttribute="top" secondItem="BjM-fF-10s" secondAttribute="top" constant="20" symbolic="YES" id="WCj-1V-TaX"/>
+                                    <constraint firstItem="OSG-iy-KxK" firstAttribute="leading" secondItem="BjM-fF-10s" secondAttribute="leading" constant="20" symbolic="YES" id="Yw9-pt-6TN"/>
+                                    <constraint firstItem="iVs-BM-O3s" firstAttribute="leading" secondItem="BjM-fF-10s" secondAttribute="leading" constant="20" symbolic="YES" id="dsr-E7-Ey7"/>
+                                    <constraint firstAttribute="trailing" secondItem="OSG-iy-KxK" secondAttribute="trailing" constant="20" symbolic="YES" id="fyu-cG-ya1"/>
+                                </constraints>
+                            </view>
+                        </tabViewItem>
+                        <tabViewItem label="Configure" identifier="2" id="1gF-iU-OXZ" userLabel="Configure">
+                            <view key="view" id="Aj5-1z-d59">
+                                <rect key="frame" x="10" y="33" width="604" height="279"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="JTc-3m-rFC">
+                                        <rect key="frame" x="79" y="259" width="46" height="17"/>
+                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Debug" id="bWb-4p-5vL">
+                                            <font key="font" metaFont="system"/>
+                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                    </textField>
+                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="00I-1c-eMe">
+                                        <rect key="frame" x="15" y="228" width="110" height="17"/>
+                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Silence on errors" id="YEN-iV-gJP">
+                                            <font key="font" metaFont="system"/>
+                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                    </textField>
+                                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="znY-z3-eZi">
+                                        <rect key="frame" x="129" y="257" width="22" height="18"/>
+                                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="Bzq-l5-3dZ">
+                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <action selector="debugOnOff:" target="-2" id="F3Z-DM-JDo"/>
+                                            <binding destination="-2" name="value" keyPath="self.debug" id="SBf-RD-S2T"/>
+                                        </connections>
+                                    </button>
+                                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nSQ-52-XwV">
+                                        <rect key="frame" x="129" y="226" width="22" height="18"/>
+                                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="TFn-BP-f6b">
+                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <action selector="silenceOnErrorsOnOff:" target="-2" id="kGo-SX-7RW"/>
+                                            <binding destination="-2" name="value" keyPath="self.silenceOnErrors" id="fJ4-QA-n3d"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                            </view>
+                        </tabViewItem>
+                        <tabViewItem label="Debug" identifier="" id="tbC-cP-vwZ" userLabel="Debug">
+                            <view key="view" id="xox-vz-l5N">
+                                <rect key="frame" x="10" y="33" width="604" height="279"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="rwy-bS-lIn">
+                                        <rect key="frame" x="20" y="50" width="564" height="209"/>
+                                        <clipView key="contentView" id="HZh-eQ-lmp">
+                                            <rect key="frame" x="1" y="1" width="223" height="133"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <subviews>
+                                                <textView importsGraphics="NO" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" spellingCorrection="YES" smartInsertDelete="YES" id="K7N-o3-ahR">
+                                                    <rect key="frame" x="0.0" y="0.0" width="223" height="133"/>
+                                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                    <size key="minSize" width="562" height="207"/>
+                                                    <size key="maxSize" width="971" height="10000000"/>
+                                                    <color key="insertionPointColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                                    <size key="minSize" width="562" height="207"/>
+                                                    <size key="maxSize" width="971" height="10000000"/>
+                                                </textView>
+                                            </subviews>
+                                            <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                        </clipView>
+                                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="vNi-ca-X4f">
+                                            <rect key="frame" x="-100" y="-100" width="87" height="18"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </scroller>
+                                        <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="5TP-vZ-SJC">
+                                            <rect key="frame" x="224" y="1" width="15" height="133"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </scroller>
+                                    </scrollView>
+                                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jax-O3-8dI">
+                                        <rect key="frame" x="462" y="16" width="122" height="19"/>
+                                        <buttonCell key="cell" type="roundRect" title="Clear" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="nkH-Nh-uIP">
+                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                            <font key="font" metaFont="cellTitle"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <action selector="onClearDebugText:" target="-2" id="sGA-WV-CUk"/>
+                                        </connections>
+                                    </button>
+                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="pPM-QR-UWK">
+                                        <rect key="frame" x="20" y="19" width="46" height="17"/>
+                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Debug" id="aNV-d3-28i">
+                                            <font key="font" metaFont="system"/>
+                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                                        </textFieldCell>
+                                    </textField>
+                                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="DZM-IE-yHo">
+                                        <rect key="frame" x="70" y="17" width="22" height="18"/>
+                                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="der-VY-MGT">
+                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                            <font key="font" metaFont="system"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <action selector="debugOnOff:" target="-2" id="osG-YK-eT4"/>
+                                            <binding destination="-2" name="value" keyPath="self.debug" id="q1L-vK-OS6"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="rwy-bS-lIn" firstAttribute="top" secondItem="xox-vz-l5N" secondAttribute="top" constant="20" symbolic="YES" id="I3h-og-vQa"/>
+                                    <constraint firstAttribute="trailing" secondItem="rwy-bS-lIn" secondAttribute="trailing" constant="20" symbolic="YES" id="JbJ-hr-ryV"/>
+                                    <constraint firstAttribute="bottom" secondItem="rwy-bS-lIn" secondAttribute="bottom" constant="50" id="VgI-c9-RKc"/>
+                                    <constraint firstItem="rwy-bS-lIn" firstAttribute="leading" secondItem="xox-vz-l5N" secondAttribute="leading" constant="20" symbolic="YES" id="XhD-7v-U5Z"/>
+                                </constraints>
+                            </view>
+                        </tabViewItem>
+                    </tabViewItems>
+                </tabView>
             </subviews>
-            <point key="canvasLocation" x="-2180" y="318"/>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="RX2-Yb-GSG" secondAttribute="trailing" constant="20" symbolic="YES" id="G3I-Sb-O89"/>
+                <constraint firstItem="RX2-Yb-GSG" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="O6T-SG-iha"/>
+                <constraint firstItem="8dd-xG-ds0" firstAttribute="centerX" secondItem="RX2-Yb-GSG" secondAttribute="centerX" id="aSc-hT-T3x"/>
+                <constraint firstAttribute="bottom" secondItem="RX2-Yb-GSG" secondAttribute="bottom" constant="20" symbolic="YES" id="gRg-Vv-8Vd"/>
+                <constraint firstItem="8dd-xG-ds0" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="20" symbolic="YES" id="jdf-kt-lOn"/>
+                <constraint firstItem="RX2-Yb-GSG" firstAttribute="top" secondItem="8dd-xG-ds0" secondAttribute="bottom" constant="8" symbolic="YES" id="uhQ-ak-dIJ"/>
+            </constraints>
+            <point key="canvasLocation" x="-3126" y="-138.5"/>
         </customView>
         <viewController id="Km2-r7-VkK" customClass="NativeEditorController">
             <connections>

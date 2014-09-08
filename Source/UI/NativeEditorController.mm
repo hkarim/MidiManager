@@ -9,6 +9,7 @@
 #import "NativeEditorController.h"
 
 @interface NativeEditorController ()
+@property (assign) IBOutlet NSTextView *debugTextView;
 
 @end
 
@@ -18,6 +19,8 @@ __weak MessageBus* bus;
 
 @synthesize loadedFileName;
 @synthesize errors;
+@synthesize debug;
+@synthesize silenceOnErrors;
 
 
 -(void) setMessageBus: (MessageBus*) encapsulatedMessageBus {
@@ -45,12 +48,14 @@ __weak MessageBus* bus;
     bus->publish(e);
 }
 
-- (void) ignoreme {
-    NSAlert* alert = [[NSAlert alloc] init];
-    [alert setMessageText:@"Hello"];
-    [alert runModal];
+-(void) log:(NSString*) packet {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSAttributedString* attr = [[NSAttributedString alloc] initWithString:packet];
+        
+        [[_debugTextView textStorage] appendAttributedString:attr];
+        [_debugTextView scrollRangeToVisible:NSMakeRange([[_debugTextView string] length], 0)];
+    });
 }
-
 
 - (IBAction)loadScriptClicked:(NSButton *)sender {
     NSArray* files = [self openFiles];
@@ -67,6 +72,28 @@ __weak MessageBus* bus;
     }
     
 }
+
+- (IBAction)debugOnOff:(id)sender {
+    [self configurationChanged];
+}
+
+- (IBAction)silenceOnErrorsOnOff:(id)sender {
+    [self configurationChanged];
+}
+- (IBAction)onClearDebugText:(id)sender {
+    NSAttributedString* attr = [[NSAttributedString alloc] initWithString:@""];
+    [[_debugTextView textStorage] setAttributedString:attr];
+}
+
+-(void) configurationChanged {
+    Event e;
+    e.uiEvent = UIEvent::EditorConfigured;
+    e.Configuration.silenceOnErrors = self.silenceOnErrors;
+    e.Configuration.debug = self.debug;
+    bus->publishAsync(e);
+}
+
+
 
 - (NSArray *) openFiles {
     NSArray *fileTypes = [NSArray arrayWithObjects:@"pure",nil];

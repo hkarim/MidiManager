@@ -50,11 +50,14 @@ inline bool exists (const std::string& name) {
     return (stat (name.c_str(), &buffer) == 0);
 }
 
-PureLink::PureLink(const std::string& filename, MessageBus* bus) : bus { bus }, filename { filename } {
+PureLink::PureLink(const std::string& filename, MessageBus* bus) :
+EventListener { }, bus { bus }, filename { filename } {
     if (debug)
         printf("PureLink: Loading pure file: %s\n", filename.c_str());
 
     std::lock_guard<std::mutex> lock(mutex);
+        
+    bus->addListener(this);
     
     if (exists(filename)) {
         std::ifstream stream(filename);
@@ -70,6 +73,8 @@ PureLink::PureLink(const std::string& filename, MessageBus* bus) : bus { bus }, 
 
 PureLink::~PureLink() {
     std::lock_guard<std::mutex> lock(mutex);
+    
+    bus->removeListener(this);
     
     if (debug) printf("PureLink: destroying pure link\n");
     if (processMidiBuffer) pure_free(processMidiBuffer);
@@ -121,6 +126,17 @@ void PureLink::init() {
         clear_lasterr();
     }
     pure_unlock_interp(local);
+}
+        
+void PureLink::onEvent(const Event& event) {
+    switch (event.uiEvent) {
+        case UIEvent::EditorConfigured:
+            this->logging = event.Configuration.debug;
+            this->silenceOnErrors = event.Configuration.silenceOnErrors;
+            break;
+        default:
+            break;
+    }
 }
 
 void PureLink::callPureFinalize() {
@@ -222,6 +238,14 @@ bool PureLink::createMessageFrom(pure_expr* expr, MidiMessage& message, int& pos
             message = MidiMessage(status, byte1, byte2);
             success = true;
         }
+    } else {
+        errors =
+        "Your script is not returning the supported format.\n"
+        "processMidiBuffer should return a list of tuples, each tuple (e,p) represents a MIDI event 'e' and position 'p'\n";
+        Event e;
+        e.uiEvent = UIEvent::ScriptErrors;
+        e.ScriptData.compilationErrors = errors;
+        bus->publish(e);
     }
     
     return success;
@@ -229,11 +253,12 @@ bool PureLink::createMessageFrom(pure_expr* expr, MidiMessage& message, int& pos
 
 MidiBuffer PureLink::processBlock(MidiBuffer& input) {
     if (hasErrors()) {
-        return input;
+        return silenceOnErrors? MidiBuffer() : input;
     }
     
     std::lock_guard<std::mutex> lock(mutex);
-    if (!errors.empty()) return input;
+    
+    if (!errors.empty()) return silenceOnErrors? MidiBuffer() : input;
 
     pure_interp* local = pure_lock_interp(interp);
     
@@ -263,23 +288,32 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
     if (!v.empty()) {
         pure_expr** listargs = &v[0];
         pure_expr* list = pure_listv(v.size(), listargs);
-        //const char* ingoing = str(list);
-        //printf("ingoing: %s\n", ingoing);
+
         pure_expr* args[] = {list};
         if (processMidiBuffer) {
             pure_expr* exceptions = nullptr;
             pure_expr* result = pure_appxv(processMidiBuffer, 1, args, &exceptions);
             if (exceptions) {
-                errors = str(exceptions);
+                errors =
+                  "An exception (" +
+                  std::string(str(exceptions)) +
+                  ") has been thrown while executing your script, please debug your code";
                 Event e;
                 e.uiEvent = UIEvent::ScriptErrors;
-                e.ScriptData.compilationErrors =
-                  "An exception (" + errors + ") has been thrown while executing your script, please debug your code";
+                e.ScriptData.compilationErrors = errors;
+                
                 bus->publish(e);
             } else {
-                //const char* outgoing = str(result);
-                //printf("outgoing: %s\n", outgoing);
-                //printf("returned: %s\n", str(result));
+                if (logging) {
+                    char* ingoing = str(list);
+                    char* outgoing = str(result);
+                    std::string packet = std::string(ingoing) + std::string("\n") + std::string(outgoing);
+                    Event e;
+                    e.uiEvent = UIEvent::Logging;
+                    e.MidiStream.packet = packet;
+                    bus->publishAsync(e);
+                }
+
                 pure_free(list);
                 size_t resultSize;
                 pure_expr** elems;
@@ -292,6 +326,14 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
                         }
                         
                     }
+                } else {
+                    errors =
+                    "Your script is not returning the supported format.\n"
+                    "processMidiBuffer should return a list of tuples, each tuple (e,p) represents a MIDI event 'e' and position 'p'\n";
+                    Event e;
+                    e.uiEvent = UIEvent::ScriptErrors;
+                    e.ScriptData.compilationErrors = errors;
+                    bus->publish(e);
                 }
             }
         }

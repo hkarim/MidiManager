@@ -19,7 +19,7 @@
 #include "MessageBus.h"
 
 
-class PureLink {
+class PureLink : EventListener {
 private:
     std::mutex mutex;
     MessageBus* bus;
@@ -36,18 +36,24 @@ private:
     std::string code;
     std::string errors;
     bool debug = false;
-    
+    bool logging = false;
+    bool silenceOnErrors = false;
     
     
 public:
     PureLink(const std::string& filename, MessageBus* bus);
     ~PureLink();
+    void onEvent(const Event& event);
     static void callPureFinalize();
     PureEditor* getPureEditor();
     const std::string getFilename();
     MidiBuffer processBlock(MidiBuffer& input);
     bool hasErrors();
     const std::string getErrors();
+    bool isLogging() { return logging; }
+    void setLogging(bool l) { logging = l; }
+    bool isSilenceOnErrors() { return silenceOnErrors; }
+    void setSilenceOnErrors(bool s) { silenceOnErrors = s; }
     const pure_interp* currentInterpreter() { return pure_current_interp(); }
 
 private:

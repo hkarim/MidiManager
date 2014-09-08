@@ -24,7 +24,7 @@ private:
     NSViewComponent nsviewComponent;
     MessageBus* bus;
     int currentWidth = 650;
-    int currentHeight = 300;
+    int currentHeight = 381;
     
 public:
     MidiManagerAudioProcessorEditor (MidiManagerAudioProcessor* ownerFilter);
