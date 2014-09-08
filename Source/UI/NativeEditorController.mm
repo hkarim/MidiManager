@@ -17,14 +17,22 @@
 
 __weak MessageBus* bus;
 
+
+
 @synthesize loadedFileName;
 @synthesize errors;
 @synthesize debug;
 @synthesize silenceOnErrors;
 
+-(void) dealloc {
+    if (listener)
+        delete listener;
+    [super dealloc];
+}
 
 -(void) setMessageBus: (MessageBus*) encapsulatedMessageBus {
     bus = encapsulatedMessageBus;
+    listener = new NativeEditorControllerListener(self, bus);
 }
 
 
@@ -37,7 +45,8 @@ __weak MessageBus* bus;
 }
 
 -(void) editorLoaded {
-    //NSLog(@"NativeEditorController::editorLoaded %@", self);
+    
+
     self.loadedFileName = @"Nothing Loaded right now";
     self.errors = @"No errors";
     
@@ -48,11 +57,81 @@ __weak MessageBus* bus;
     bus->publish(e);
 }
 
--(void) log:(NSString*) packet {
+-(void) configurationChanged {
+    Event e;
+    e.uiEvent = UIEvent::EditorConfigured;
+    e.Configuration.silenceOnErrors = self.silenceOnErrors;
+    e.Configuration.debug = self.debug;
+    bus->publishAsync(e);
+}
+
+
+-(void) onEvent:(const Event&) event {
+    switch (event.uiEvent) {
+            
+        case UIEvent::ScriptErrors:
+            
+            [self onScriptErrors: event];
+            break;
+            
+        case UIEvent::EditorRestoreState:
+
+            [self onRestoreState: event];
+            break;
+            
+        case UIEvent::Logging:
+            
+            [self onLogging: event];
+            break;
+            
+        default:
+            break;
+    }
+    
+}
+
+-(void) onScriptErrors: (const Event&) event {
+    [self setErrors:[NSString stringWithFormat:@"%s", event.ScriptData.compilationErrors.c_str()]];
+}
+
+-(void) onRestoreState: (const Event&) event {
+    [self setLoadedFileName:[NSString stringWithFormat:@"%s", event.FileData.filename.c_str()]];
+    if (!event.ScriptData.compilationErrors.empty()) {
+        [self setErrors:[NSString stringWithFormat:@"%s", event.ScriptData.compilationErrors.c_str()]];
+    } else {
+        [self setErrors:@"Compiled Successfully"];
+    }
+}
+
+-(void) onLogging: (const Event&) event {
+    
+    NSString* in = [NSString stringWithFormat:@"%s", event.MidiStream.input.c_str()];
+    NSString* out = [NSString stringWithFormat:@"%s", event.MidiStream.output.c_str()];
+    [self log:in withOutput:out];
+
+}
+
+-(void) log:(NSString*) input withOutput:(NSString*) output {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSAttributedString* attr = [[NSAttributedString alloc] initWithString:packet];
-        
-        [[_debugTextView textStorage] appendAttributedString:attr];
+        NSFont* font = [NSFont fontWithName:@"Menlo" size:12];
+        NSColor* inColor = [NSColor colorWithCalibratedRed:(255/255.0f) green:(189/255.0f) blue:(100/255.0f) alpha:1];
+        NSColor* outColor = [NSColor colorWithCalibratedRed:(120/255.0f) green:(158/255.0f) blue:(125/255.0f) alpha:1];
+        NSDictionary* inAttributes =
+        @{
+          NSFontAttributeName :font,
+          NSForegroundColorAttributeName :inColor
+        };
+        NSDictionary* outAttributes =
+        @{
+          NSFontAttributeName :font,
+          NSForegroundColorAttributeName :outColor
+        };
+
+        NSAttributedString* inattr = [[NSAttributedString alloc] initWithString:input attributes:inAttributes];
+        NSAttributedString* outattr = [[NSAttributedString alloc] initWithString:output attributes:outAttributes];
+            
+        [[_debugTextView textStorage] appendAttributedString:inattr];
+        [[_debugTextView textStorage] appendAttributedString:outattr];
         [_debugTextView scrollRangeToVisible:NSMakeRange([[_debugTextView string] length], 0)];
     });
 }
@@ -85,13 +164,6 @@ __weak MessageBus* bus;
     [[_debugTextView textStorage] setAttributedString:attr];
 }
 
--(void) configurationChanged {
-    Event e;
-    e.uiEvent = UIEvent::EditorConfigured;
-    e.Configuration.silenceOnErrors = self.silenceOnErrors;
-    e.Configuration.debug = self.debug;
-    bus->publishAsync(e);
-}
 
 
 

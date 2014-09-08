@@ -62,6 +62,7 @@ private:
     pure_expr* createNoteOnMessage(int channel, int note, int velocity, int position);
     pure_expr* createNoteOffMessage(int channel, int note, int position);
     bool createMessageFrom(pure_expr* expr, MidiMessage& message, int& position);
+    void log(const std::string& ingoing, const std::string& outgoing);
 };
 
 

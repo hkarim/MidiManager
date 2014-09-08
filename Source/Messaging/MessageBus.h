@@ -47,7 +47,8 @@ struct Event {
     } Configuration;
     
     struct {
-        std::string packet;
+        std::string input;
+        std::string output;
     } MidiStream;
 };
 

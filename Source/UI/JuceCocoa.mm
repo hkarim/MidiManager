@@ -47,6 +47,7 @@ void* JuceCocoa::createNSView() {
 
 
 void JuceCocoa::onEvent(const Event& event) {
+    /*
     switch (event.uiEvent) {
         case UIEvent::ScriptErrors:
             if (controller) {
@@ -72,15 +73,16 @@ void JuceCocoa::onEvent(const Event& event) {
         case UIEvent::Logging:
             if (controller) {
                 NativeEditorController* c = (NativeEditorController*) controller;
-                if (!event.MidiStream.packet.empty()) {
-                    [c log:[NSString stringWithFormat:@"%s", event.MidiStream.packet.c_str()]];
-                }
+                NSString* in = [NSString stringWithFormat:@"%s", event.MidiStream.input.c_str()];
+                NSString* out = [NSString stringWithFormat:@"%s", event.MidiStream.output.c_str()];
+                [c log:in withOutput:out];
             }
             break;
             
         default:
             break;
     }
+    */
 }
 
 

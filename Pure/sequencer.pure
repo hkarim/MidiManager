@@ -20,7 +20,7 @@ processMidiBuffer buf = // buf is on the form [(event, position)...]
       collect_with_filter (\m -> (is_note_on_or_off m) && (get_channel m) == chord_ch) messages; // collect only notes on and off
     pass_through = 
       collect_with_filter (\m -> ~(is_note_on_or_off m)) messages; // collect other messages
-    processed = update_chord chord_notes_on_off $$ catmap mk_notes notes_on_off;
+    processed = (update_chord chord_notes_on_off) + (catmap mk_notes notes_on_off);
     result = 
       to_tuple_list (processed + pass_through); // process note events and pass other events through, then convert to original format 
   end;
@@ -29,12 +29,15 @@ update_chord m_list =
   result with 
     add_or_remove m::message_t = 
       if is_note_on m then
-        chord_add (get_note m)
-      else
-        chord_rm (get_note m)
+        chord_add (get_note m) $$ []
+      else  // in case a note is removed from a chord, turn it off on all octaves of the output channel
+        chord_rm (get_note m) $$ note_off_on_all_octaves m
       ;
-    result = map add_or_remove m_list;
+    result = catmap add_or_remove m_list;
   end;
+
+note_off_on_all_octaves m::message_t =
+  map (\octave -> note_off_message output_ch ((octave * 12) + ((get_note m) mod 12)) (position m))(0..6);
 
 mk_notes m::message_t =
   result with

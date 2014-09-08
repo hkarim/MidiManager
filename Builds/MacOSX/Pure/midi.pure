@@ -63,7 +63,8 @@ note_off_event channel::int note::int = pack_event (0x80 or channel) (note and 1
 note_off_message channel::int note::int position::int = Message (note_off_event channel note) position;
 note_off_tuple channel::int note::int position::int = (note_off_event channel note, position);
 
-all_notes_off c::int p::int = Message ( pack_event (0xb0 or c) (123 and 127) (0 and 127) ) p;
+all_notes_off c::int p::int = Message ( pack_event (0xb0 or c) (123 and 127) (0) ) p;
+//all_notes_off c::int p::int = Message 31664 p;
 
 
 to_note_t event::int = 

@@ -171,6 +171,19 @@ void PureLink::addGuiHook() {
     pure_expr* args[] = {editorExpr};
     pure_appv(createEditor, 1, args);
 }
+        
+void PureLink::log(const std::string& ingoing, const std::string& outgoing) {
+    
+    std::ostringstream input, output;
+    input << "[In] " << ingoing << std::endl;
+    output << "[Out] " << outgoing << std::endl << std::endl;
+    Event e;
+    e.uiEvent = UIEvent::Logging;
+    e.MidiStream.input = input.str();
+    e.MidiStream.output = output.str();
+    bus->publishAsync(e);
+    
+}
 
 pure_expr* PureLink::createNoteOnMessage(int channel, int note, int velocity, int position) {
     if (debug) printf("PureLink: createNoteOnMessage\n");
@@ -281,14 +294,20 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
             int32_t word = ((data2<<16) & 0xff0000) | ((data1<<8) & 0xff00) | (status & 0xff);
             int32_t tuplevalues[] = {word, position};
             pure_expr* tupleexpr = pure_inttuplev(2, tuplevalues);
+            if (logging) {
+                std::ostringstream in, out;
+                in << "word: " << word << ", status: " << (int)status << ", data1: " << (int)data1 << ", data2: " << (int)data2;
+                out << "tuple: " << str(tupleexpr);
+                log(in.str(), out.str());
+            }
             v.push_back(tupleexpr);
         }
     }
     
     if (!v.empty()) {
         pure_expr** listargs = &v[0];
-        pure_expr* list = pure_listv(v.size(), listargs);
-
+        pure_expr* tail = pure_listl(0);
+        pure_expr* list = pure_listv2(v.size(), listargs, tail);
         pure_expr* args[] = {list};
         if (processMidiBuffer) {
             pure_expr* exceptions = nullptr;
@@ -304,16 +323,13 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
                 
                 bus->publish(e);
             } else {
+                
                 if (logging) {
                     char* ingoing = str(list);
                     char* outgoing = str(result);
-                    std::string packet = std::string(ingoing) + std::string("\n") + std::string(outgoing);
-                    Event e;
-                    e.uiEvent = UIEvent::Logging;
-                    e.MidiStream.packet = packet;
-                    bus->publishAsync(e);
+                    log(ingoing, outgoing);
                 }
-
+                
                 pure_free(list);
                 size_t resultSize;
                 pure_expr** elems;
