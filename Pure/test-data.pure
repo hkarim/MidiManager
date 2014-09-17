@@ -1,0 +1,12 @@
+
+
+n0 = note_on_tuple 0 60 80 100;
+n1 = note_on_tuple 0 64 90 200;
+buf = [n0,n1];
+
+chorder = Chorder 5 (dict [0=>[0,4,7]]);
+
+apply chorder buf;
+
+
+

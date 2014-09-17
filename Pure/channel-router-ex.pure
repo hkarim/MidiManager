@@ -1,0 +1,21 @@
+using dict;
+using midi;
+
+type range (Range lower::int upper::int) = lower <= upper;
+(<) (Range ll lu) (Range rl ru) = ll < rl && lu < ru;
+
+
+const channel_dict = dict [ Range 0 80 => 0 , Range 81 127 => 1 ];
+
+processMidiBuffer buf =
+  map change_channel buf with
+    change_channel t =
+      result with 
+        velocity = get_velocity t;
+        r = Range velocity velocity;
+        result =
+          if member channel_dict r
+          then set_channel t (channel_dict!r)
+          else t;
+      end;
+  end;

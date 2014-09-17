@@ -1,15 +1,22 @@
 #! --nosymbolic
 
+type event_position_t (e,p) = intp e && intp p;
+type midi_buffer_t xs::list = all (\(e,p) -> intp e && intp p) xs; 
 type message_t (Message event::int position::int) = true;
-event (Message e _) = e;
-position (Message _ p) = p;
-let empty_message = (Message 0 0);
-is_empty_message m::message_t = (event m) == 0 && (position m) == 0;
-drop_empty_messages mxs::list = filter (\m -> ~(is_empty_message m)) mxs;
-to_message_t (event,position) = Message event position;
-to_message_t m::message_t     = m;
-to_message_t xs::list         = map to_message_t xs;
-to_tuple_list mxs::list       = map (\m -> (event m, position m)) mxs;
+type message_list_t xs::list = all (typep message_t) xs;
+
+event (Message e _)                            = e;
+event (e,_)                                    = e;
+position (Message _ p)                         = p;
+position (_,p)                                 = p;
+const empty_message                            = (Message 0 0);
+is_empty_message m::message_t                  = (event m) == 0 && (position m) == 0;
+drop_empty_messages mxs::message_list_t        = filter (\m -> ~(is_empty_message m)) mxs;
+to_message_t (event,position)                  = Message event position;
+to_message_t m::message_t                      = m;
+to_message_list_t xs::list                     = map to_message_t xs;
+to_event_position_t (Message event position)   = (event,position);
+to_midi_buffer_t mxs::message_list_t           = map (\m -> (event m, position m)) mxs;
 
 nonfix NoteOn;
 nonfix NoteOff;
@@ -18,12 +25,15 @@ nonfix None;
 type note_t None | note_t (NoteOn channel::int note::int velocity::int) | note_t (NoteOff channel::int note::int) = true;
 
 
+status (e,p)          = status e;
 status m::message_t   = status (event m);
 status event::int     = event and 0xff;
 
+data1 (e,p)           = data1 e;
 data1 m::message_t    = data1 (event m);
 data1 event::int      = (event >> 8) and 0xff;
 
+data2 (e,p)           = data2 e;
 data2 m::message_t    = data1 (event m);
 data2 event::int      = (event >> 16) and 0xff;
 
@@ -63,6 +73,18 @@ note_off_event channel::int note::int = pack_event (0x80 or channel) (note and 1
 note_off_message channel::int note::int position::int = Message (note_off_event channel note) position;
 note_off_tuple channel::int note::int position::int = (note_off_event channel note, position);
 
+turn_note_off (e,p) = note_off_tuple (get_channel e) (get_note e) p;
+turn_note_off event::int = note_off_event (get_channel event) (get_note event);
+turn_note_off m::message_t = note_off_message (get_channel m) (get_note m) (position m);  
+
+set_channel event::int channel::int    =
+  if ((status event) and 0xf0) ~= 0xf0
+  then pack_event ( (status event) and 0xf0 or channel) (data1 event) (data2 event)
+  else event;
+set_channel (e,p) channel::int         = (set_channel e channel, p);
+set_channel (Message e p) channel::int = Message (set_channel e channel) p;
+
+
 all_notes_off c::int p::int = Message ( pack_event (0xb0 or c) (123 and 127) (0 and 127) ) p;
 
 
@@ -83,13 +105,39 @@ to_event note::note_t =
     _                              = 0;
   end;
 
+
+transpose_note t@(e,p) semitones::int      =
+  case to_note_t t of
+    (NoteOn c n v) = note_on_tuple c (n+semitones) v p;
+    (NoteOff c n)  = note_off_tuple c (n+semitones) p;
+    _              = t;
+  end;
+
+transpose_note event::int semitones::int   = 
+  case to_note_t event of
+    (NoteOn c n v) = note_on_event c (n+semitones) v;
+    (NoteOff c n)  = note_off_event c (n+semitones);
+    _              = event;
+  end;
+
+transpose_note m::message_t semitones::int = 
+  case to_note_t m of
+    (NoteOn c n v) = note_on_message c (n+semitones) v (position m);
+    (NoteOff c n)  = note_off_message c (n+semitones) (position m);
+    _              = m;
+  end;
+
+
+
 collect_note_on xs::list  = collect_with_event_filter is_note_on xs;
 collect_note_off xs::list = collect_with_event_filter is_note_off xs;
+collect_note_on_or_off xs::list = collect_with_event_filter (\e -> (is_note_on e) || (is_note_off e)) xs;
 collect_channel channel::int xs::list = collect_with_event_filter (\e -> channel == (get_channel e)) xs;
 
 
 collect_with_event_filter filter xs::list = 
    foldl (coll filter) [] xs with
+    coll filter acc ep@(e,p)            = acc + [ep] if filter e;
     coll filter acc m@(Message event _) = acc + [m] if filter event;
     coll filter acc event::int          = acc + [event] if filter event;
     coll _      acc _                   = acc;
@@ -97,9 +145,10 @@ collect_with_event_filter filter xs::list =
 
 collect_with_filter filter xs::list = 
    foldl (coll filter) [] xs with
-    coll filter acc m@(Message _ _)     = acc + [m] if filter m;
-    coll filter acc event::int          = acc + [event] if filter event;
-    coll _      acc _                   = acc;
+    coll filter acc ep::event_position_t = acc + [ep] if filter ep;
+    coll filter acc m@(Message _ _)      = acc + [m] if filter m;
+    coll filter acc event::int           = acc + [event] if filter event;
+    coll _      acc _                    = acc;
   end;
 
 

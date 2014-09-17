@@ -1,0 +1,75 @@
+using midi;
+using set;
+
+let pattern_ch = 0;
+let chord_ch   = 1;
+let output_ch  = 0;
+let chordref = ref (set []);
+chord_set = get chordref;
+chord = list (get chordref);
+chord_add n::int = put chordref (chord_set + set [n]);
+chord_rm  n::int = put chordref (chord_set - set [n]);
+let c_0 = 0;
+
+processMidiBuffer buf::midi_buffer_t = // buf is on the form [(event, position)...]
+  result with
+    messages = to_message_list_t buf;  // convert to the form [Message ...]
+    notes_on_off = 
+      collect_with_filter (\m -> (is_note_on_or_off m) && (get_channel m) == pattern_ch) messages; // collect only notes on and off
+    chord_notes_on_off = 
+      collect_with_filter (\m -> (is_note_on_or_off m) && (get_channel m) == chord_ch) messages; // collect only notes on and off
+    pass_through = 
+      collect_with_filter (\m -> ~(is_note_on_or_off m)) messages; // collect other messages
+    processed = (update_chord chord_notes_on_off) + (catmap mk_notes notes_on_off);
+    result = 
+      to_midi_buffer_t (processed + pass_through); // process note events and pass other events through, then convert to original format 
+  end;
+
+update_chord m_list::message_list_t =
+  result with 
+    add_or_remove m::message_t = 
+      if is_note_on m then
+        chord_add (get_note m) $$ []
+      else  // in case a note is removed from a chord, turn it off on all octaves of the output channel
+        chord_rm (get_note m) $$ note_off_on_all_octaves m
+      ;
+    result = catmap add_or_remove m_list;
+  end;
+
+note_off_on_all_octaves m::message_t =
+  map (\octave -> note_off_message output_ch ((octave * 12) + ((get_note m) mod 12)) (position m))(0..6);
+
+mk_notes m::message_t =
+  result with
+    on = is_note_on m;
+    off = is_note_off m;
+    n = get_note m;
+    c = get_channel m;
+    v = if on then get_velocity m else 0;
+    p = position m;
+    distance_from_base = n mod 12;
+    octave = n div 12;
+    transpose = octave * 12;
+    chord_note d =  (chord!(d-1)) + transpose;
+    process =
+       case distance_from_base of
+        0 = chord_on c v transpose p if on;
+        0 = chord_off c transpose p if off;
+        d = [note_on_message c (chord_note d) v p] if on && d <= #chord;
+        d = [note_off_message c (chord_note d) p]  if off && d <= #chord;
+        _ = [];
+      end;
+
+    result = if (#chord) == 0 then [all_notes_off c p] else process;
+  end;
+
+chord_on channel::int velocity::int transpose::int position::int =
+  map (\n -> note_on_message channel (n+transpose) velocity position) chord;
+
+chord_off channel::int transpose::int position::int =
+  map (\n -> note_off_message channel (n+transpose) position) chord;
+
+
+
+
+

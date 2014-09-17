@@ -55,14 +55,14 @@ public:
     bool isSilenceOnErrors() { return silenceOnErrors; }
     void setSilenceOnErrors(bool s) { silenceOnErrors = s; }
     const pure_interp* currentInterpreter() { return pure_current_interp(); }
-
+    void log(const std::string& ingoing, const std::string& outgoing);
 private:
     void init();
     void addGuiHook();
     pure_expr* createNoteOnMessage(int channel, int note, int velocity, int position);
     pure_expr* createNoteOffMessage(int channel, int note, int position);
     bool createMessageFrom(pure_expr* expr, MidiMessage& message, int& position);
-    void log(const std::string& ingoing, const std::string& outgoing);
+    
 };
 
 

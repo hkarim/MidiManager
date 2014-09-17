@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6206.9" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="6245" systemVersion="13E28" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6206.9"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="6245"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="NativeEditorController">
@@ -81,50 +81,10 @@
                                 </constraints>
                             </view>
                         </tabViewItem>
-                        <tabViewItem label="Configure" identifier="2" id="1gF-iU-OXZ" userLabel="Configure">
+                        <tabViewItem label="UI" identifier="2" id="1gF-iU-OXZ" userLabel="Configure">
                             <view key="view" id="Aj5-1z-d59">
                                 <rect key="frame" x="10" y="33" width="654" height="298"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                <subviews>
-                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="JTc-3m-rFC">
-                                        <rect key="frame" x="79" y="278" width="46" height="17"/>
-                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Debug" id="bWb-4p-5vL">
-                                            <font key="font" metaFont="system"/>
-                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                        </textFieldCell>
-                                    </textField>
-                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="00I-1c-eMe">
-                                        <rect key="frame" x="15" y="247" width="110" height="17"/>
-                                        <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Silence on errors" id="YEN-iV-gJP">
-                                            <font key="font" metaFont="system"/>
-                                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
-                                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
-                                        </textFieldCell>
-                                    </textField>
-                                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="znY-z3-eZi">
-                                        <rect key="frame" x="129" y="276" width="22" height="18"/>
-                                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="Bzq-l5-3dZ">
-                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                            <font key="font" metaFont="system"/>
-                                        </buttonCell>
-                                        <connections>
-                                            <action selector="debugOnOff:" target="-2" id="F3Z-DM-JDo"/>
-                                            <binding destination="-2" name="value" keyPath="self.debug" id="SBf-RD-S2T"/>
-                                        </connections>
-                                    </button>
-                                    <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nSQ-52-XwV">
-                                        <rect key="frame" x="129" y="245" width="22" height="18"/>
-                                        <buttonCell key="cell" type="check" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="TFn-BP-f6b">
-                                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
-                                            <font key="font" metaFont="system"/>
-                                        </buttonCell>
-                                        <connections>
-                                            <action selector="silenceOnErrorsOnOff:" target="-2" id="kGo-SX-7RW"/>
-                                            <binding destination="-2" name="value" keyPath="self.silenceOnErrors" id="fJ4-QA-n3d"/>
-                                        </connections>
-                                    </button>
-                                </subviews>
                             </view>
                         </tabViewItem>
                         <tabViewItem label="Debug" identifier="" id="tbC-cP-vwZ" userLabel="Debug">
@@ -139,7 +99,7 @@
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
                                                 <textView importsGraphics="NO" findStyle="panel" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" smartInsertDelete="YES" id="K7N-o3-ahR">
-                                                    <rect key="frame" x="0.0" y="0.0" width="223" height="207"/>
+                                                    <rect key="frame" x="0.0" y="0.0" width="223" height="251"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <color key="textColor" red="1" green="0.74117648601531982" blue="0.38039219379425049" alpha="1" colorSpace="deviceRGB"/>
                                                     <color key="backgroundColor" red="0.17254902422428131" green="0.17254902422428131" blue="0.17254902422428131" alpha="1" colorSpace="deviceRGB"/>

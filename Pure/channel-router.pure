@@ -1,0 +1,12 @@
+using dict;
+using midi;
+
+const channel_dict = dict [ 0 => 1 , 1 => 2 ];
+
+processMidiBuffer buf =
+  map change_channel buf with
+  change_channel t =
+      if member channel_dict (get_channel t)
+      then set_channel t (channel_dict!(get_channel t))
+      else t;
+  end;

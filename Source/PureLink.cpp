@@ -43,12 +43,33 @@ struct MainInterpreter {
     }
     
     pure_interp* defaultInstance = pure_create_interp(0, 0);
+    
 } interpreter;
+
+
+
+
+
 
 inline bool exists (const std::string& name) {
     struct stat buffer;
     return (stat (name.c_str(), &buffer) == 0);
 }
+
+extern "C"
+void pure_link_debug(pure_expr* pureLinkPointer, const char* message) {
+    //printf("pure_link_debug: %s\n", message);
+    void* p;
+    if (pure_is_pointer(pureLinkPointer, &p)) {
+        //printf("passed\n");
+        PureLink* pureLink = (PureLink*) p;
+        if (pureLink)
+            pureLink->log("[debug]", message);
+    }
+}
+
+
+
 
 PureLink::PureLink(const std::string& filename, MessageBus* bus) :
 EventListener { }, bus { bus }, filename { filename } {
@@ -103,16 +124,24 @@ void PureLink::init() {
     pure_expr* evaluated = pure_eval(code.c_str());
     if (evaluated) {
         block = pure_new(evaluated);
-        pure_interp_compile(interp, 0);
+        
         
         int32_t processMidiBufferSymbol = pure_getsym("processMidiBuffer");
         if (processMidiBufferSymbol != 0 ) {
             processMidiBuffer = pure_new(pure_symbol(processMidiBufferSymbol));
+            pure_interp_compile(interp, processMidiBufferSymbol);
         }
         
         int32_t createEditorSymbol = pure_getsym("createEditor");
         if (createEditorSymbol != 0 ) {
             createEditor = pure_new(pure_symbol(createEditorSymbol));
+        }
+        
+        // inject PureLink instance
+        int32_t pureLinkInstanceSymbol = pure_sym("pure_link");
+        if (pureLinkInstanceSymbol) {
+            pure_expr* pointer = pure_new(pure_pointer((void*) this));
+            pure_let(pureLinkInstanceSymbol, pointer);
         }
         
     } else {
@@ -285,7 +314,12 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
     while (inputItr.getNextEvent(message, position)) {
         
         int size = message.getRawDataSize();
-
+        
+        if (logging && message.isMetaEvent()) {
+            int met = message.getMetaEventType();
+            log("Meta-Event", std::to_string(met));
+        }
+        
         if (size > 0) {
             const uint8* data = message.getRawData();
             uint8 status = data[0];

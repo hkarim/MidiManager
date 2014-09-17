@@ -27,8 +27,6 @@
 		3DC078A719B6319300114325 /* NativeEditorController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DC078A619B6319300114325 /* NativeEditorController.mm */; };
 		3DDC94ED19B745FA006D6059 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3DDC94EC19B745FA006D6059 /* Carbon.framework */; };
 		3DF0A9A519BBAE3400FA6508 /* midi.pure in Resources */ = {isa = PBXBuildFile; fileRef = 3DF0A9A219BBAE3400FA6508 /* midi.pure */; };
-		3DF0A9A619BBAE3400FA6508 /* sequencer.pure in Resources */ = {isa = PBXBuildFile; fileRef = 3DF0A9A319BBAE3400FA6508 /* sequencer.pure */; };
-		3DF0A9A719BBAE3400FA6508 /* theory.pure in Resources */ = {isa = PBXBuildFile; fileRef = 3DF0A9A419BBAE3400FA6508 /* theory.pure */; };
 		3FED5AFE2208B868C2AD5941 /* juce_RTAS_Wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A8945D90525C8A8E9FC38C45 /* juce_RTAS_Wrapper.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		40805A42B0EFD1201CE92173 /* juce_core.mm in Sources */ = {isa = PBXBuildFile; fileRef = 86487CF872BA75F9247123F0 /* juce_core.mm */; };
 		41D8E89F869B2E7520DD628A /* juce_VST_Wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6E0D8608356FD53EBF69E7FA /* juce_VST_Wrapper.cpp */; };
@@ -290,8 +288,6 @@
 		3DDC94EC19B745FA006D6059 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		3DDC94F019B76C8D006D6059 /* MessageBus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MessageBus.h; path = ../../Source/Messaging/MessageBus.h; sourceTree = "<group>"; };
 		3DF0A9A219BBAE3400FA6508 /* midi.pure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = midi.pure; sourceTree = "<group>"; };
-		3DF0A9A319BBAE3400FA6508 /* sequencer.pure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sequencer.pure; sourceTree = "<group>"; };
-		3DF0A9A419BBAE3400FA6508 /* theory.pure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = theory.pure; sourceTree = "<group>"; };
 		3E39EED7CD051819436B2D15 /* juce_MACAddress.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_MACAddress.cpp; path = ../../JuceLibraryCode/modules/juce_core/network/juce_MACAddress.cpp; sourceTree = SOURCE_ROOT; };
 		3E75167A910ED82C1E581ED9 /* juce_android_Messaging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_android_Messaging.cpp; path = ../../JuceLibraryCode/modules/juce_events/native/juce_android_Messaging.cpp; sourceTree = SOURCE_ROOT; };
 		3EB7BE802AF9B8310C7D6033 /* juce_CaretComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = juce_CaretComponent.h; path = ../../JuceLibraryCode/modules/juce_gui_basics/keyboard/juce_CaretComponent.h; sourceTree = SOURCE_ROOT; };
@@ -1359,8 +1355,6 @@
 			isa = PBXGroup;
 			children = (
 				3DF0A9A219BBAE3400FA6508 /* midi.pure */,
-				3DF0A9A319BBAE3400FA6508 /* sequencer.pure */,
-				3DF0A9A419BBAE3400FA6508 /* theory.pure */,
 			);
 			path = Pure;
 			sourceTree = "<group>";
@@ -2898,9 +2892,7 @@
 			files = (
 				3DC078A119B62C0100114325 /* NativeEditorView.xib in Resources */,
 				BA11A9C78D1E88BB70CDD898 /* RecentFilesMenuTemplate.nib in Resources */,
-				3DF0A9A719BBAE3400FA6508 /* theory.pure in Resources */,
 				3DF0A9A519BBAE3400FA6508 /* midi.pure in Resources */,
-				3DF0A9A619BBAE3400FA6508 /* sequencer.pure in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

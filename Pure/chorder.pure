@@ -1,0 +1,40 @@
+using midi;
+
+const major        = [0,4,7];
+const major7       = [0,4,7,11];
+const dom7         = [0,4,7,10];
+const minor        = [0,3,7];
+const minor7       = [0,3,7,10];
+const minor7b5     = [0,3,6,10];
+
+const transposition = 0;
+
+
+processMidiBuffer buf::midi_buffer_t = 
+  output when
+    [notes, other] = split_notes buf;
+    output = (catmap process notes) + other;
+  end;
+
+split_notes xs::list = 
+  foldl splitter [[],[]] xs with
+     splitter [notes, other] t = 
+       if is_note_on_or_off t then [notes + [t], other] else [notes, other + [t]];
+  end;
+
+process t::event_position_t = if is_note_on_or_off t then chord_on_off (pick_interval t) t else [];
+
+pick_interval t::event_position_t = 
+  case ((get_note t) - transposition) mod 12 of
+    0 = -12 : major7;   // C 
+    2 = -12 : minor7;   // D 
+    4 = -12 : minor7;   // E 
+    5 = -12 : major7;   // F
+    7 = -12 : dom7;     // G
+    9 = -12 : minor7;   // A
+    11= -12 : minor7b5; // B
+    _ = [];
+  end;
+
+chord_on_off intervals::list t::event_position_t = map (transpose_note t) intervals; 
+

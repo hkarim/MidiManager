@@ -1,0 +1,12 @@
+#! --nosymbolic
+
+using "lib:Jeelona MidiManager";
+
+private extern void pure_link_debug(expr*, char*);
+private extern void puts(char*);
+
+debug message::string = pure_link_debug pure_link message;
+
+processMidiBuffer buf =  pure_link_debug pure_link "native-1" $$ buf;
+
+
