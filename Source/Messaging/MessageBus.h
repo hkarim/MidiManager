@@ -22,7 +22,26 @@ enum class UIEvent : unsigned int {
     EditorConfigured,
     FileChosen,
     ScriptErrors,
-    Logging
+    Logging,
+    EditorWidgetChanged
+    //CreateUI
+};
+
+enum class UIWidgetType : int {
+    Slider = 100
+};
+
+struct UIWidget {
+    UIWidgetType widgetType;
+    int code;
+    std::string name;
+};
+
+struct UIWidgetSlider : UIWidget {
+    UIWidgetSlider() : UIWidget {} { widgetType = UIWidgetType::Slider; }
+    int minimum;
+    int maximum;
+    int value;
 };
 
 struct Event {
@@ -49,7 +68,17 @@ struct Event {
     struct {
         std::string input;
         std::string output;
-    } MidiStream;
+    } Logging;
+    
+    struct {
+        std::vector<UIWidget*> widgets;
+    } UI;
+    
+    struct {
+        int code;
+        int intValue;
+        std::string stringValue;
+    } Change;
 };
 
 class EventListener {

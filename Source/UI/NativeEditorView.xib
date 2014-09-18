@@ -7,6 +7,8 @@
         <customObject id="-2" userLabel="File's Owner" customClass="NativeEditorController">
             <connections>
                 <outlet property="debugTextView" destination="K7N-o3-ahR" id="bU7-ct-Wbs"/>
+                <outlet property="reloadScriptButton" destination="6S1-Uv-Qx6" id="eMO-F0-DKZ"/>
+                <outlet property="scrollView" destination="BuL-zn-QIy" id="bC6-d6-8iL"/>
                 <outlet property="view" destination="c22-O7-iKe" id="GMs-kT-naH"/>
             </connections>
         </customObject>
@@ -38,7 +40,7 @@
                                         <constraints>
                                             <constraint firstAttribute="width" constant="117" id="jMC-0k-gdC"/>
                                         </constraints>
-                                        <buttonCell key="cell" type="roundRect" title="Load Pure Script" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="wKm-Hj-M5d">
+                                        <buttonCell key="cell" type="roundRect" title="Load Script" bezelStyle="roundedRect" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="wKm-Hj-M5d">
                                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                             <font key="font" metaFont="cellTitle"/>
                                         </buttonCell>
@@ -68,6 +70,16 @@
                                             <binding destination="-2" name="value" keyPath="self.errors" id="mse-XC-Wk0"/>
                                         </connections>
                                     </textField>
+                                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="6S1-Uv-Qx6">
+                                        <rect key="frame" x="145" y="234" width="122" height="19"/>
+                                        <buttonCell key="cell" type="roundRect" title="Reload Script" bezelStyle="roundedRect" alignment="center" enabled="NO" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="cVt-bC-ivA">
+                                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                                            <font key="font" metaFont="cellTitle"/>
+                                        </buttonCell>
+                                        <connections>
+                                            <action selector="reloadScriptClicked:" target="-2" id="0il-lq-Bmn"/>
+                                        </connections>
+                                    </button>
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="LGH-Oq-Cxg" firstAttribute="top" secondItem="iVs-BM-O3s" secondAttribute="bottom" constant="8" symbolic="YES" id="3yZ-2I-gcI"/>
@@ -81,10 +93,44 @@
                                 </constraints>
                             </view>
                         </tabViewItem>
-                        <tabViewItem label="UI" identifier="2" id="1gF-iU-OXZ" userLabel="Configure">
+                        <tabViewItem label="UI" identifier="2" id="1gF-iU-OXZ">
                             <view key="view" id="Aj5-1z-d59">
                                 <rect key="frame" x="10" y="33" width="654" height="298"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <scrollView borderType="none" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BuL-zn-QIy" customClass="EditorScrollView">
+                                        <rect key="frame" x="20" y="20" width="614" height="258"/>
+                                        <clipView key="contentView" id="Oat-of-azu">
+                                            <rect key="frame" x="1" y="1" width="166" height="79"/>
+                                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                            <subviews>
+                                                <customView translatesAutoresizingMaskIntoConstraints="NO" id="vN5-eI-BSl" userLabel="Editor View" customClass="EditorView">
+                                                    <rect key="frame" x="0.0" y="0.0" width="614" height="258"/>
+                                                </customView>
+                                            </subviews>
+                                            <constraints>
+                                                <constraint firstAttribute="trailing" secondItem="vN5-eI-BSl" secondAttribute="trailing" id="1ft-3E-l3x"/>
+                                                <constraint firstItem="vN5-eI-BSl" firstAttribute="leading" secondItem="Oat-of-azu" secondAttribute="leading" id="MeM-JE-q2v"/>
+                                                <constraint firstItem="vN5-eI-BSl" firstAttribute="top" secondItem="Oat-of-azu" secondAttribute="top" id="Y50-Xb-0fZ"/>
+                                                <constraint firstAttribute="bottom" secondItem="vN5-eI-BSl" secondAttribute="bottom" id="vTz-yd-5Bs"/>
+                                            </constraints>
+                                        </clipView>
+                                        <scroller key="horizontalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="eia-MV-bb5">
+                                            <rect key="frame" x="1" y="80" width="166" height="15"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </scroller>
+                                        <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="pfj-Mk-aa8">
+                                            <rect key="frame" x="167" y="1" width="15" height="79"/>
+                                            <autoresizingMask key="autoresizingMask"/>
+                                        </scroller>
+                                    </scrollView>
+                                </subviews>
+                                <constraints>
+                                    <constraint firstItem="BuL-zn-QIy" firstAttribute="leading" secondItem="Aj5-1z-d59" secondAttribute="leading" constant="20" symbolic="YES" id="AYc-09-o2B"/>
+                                    <constraint firstAttribute="trailing" secondItem="BuL-zn-QIy" secondAttribute="trailing" constant="20" symbolic="YES" id="Ydm-bt-MH5"/>
+                                    <constraint firstItem="BuL-zn-QIy" firstAttribute="top" secondItem="Aj5-1z-d59" secondAttribute="top" constant="20" symbolic="YES" id="aCL-FW-Ks6"/>
+                                    <constraint firstAttribute="bottom" secondItem="BuL-zn-QIy" secondAttribute="bottom" constant="20" symbolic="YES" id="zV7-d4-mB8"/>
+                                </constraints>
                             </view>
                         </tabViewItem>
                         <tabViewItem label="Debug" identifier="" id="tbC-cP-vwZ" userLabel="Debug">
@@ -163,14 +209,14 @@
                 </tabView>
             </subviews>
             <constraints>
-                <constraint firstAttribute="trailing" secondItem="RX2-Yb-GSG" secondAttribute="trailing" constant="20" symbolic="YES" id="G3I-Sb-O89"/>
-                <constraint firstItem="RX2-Yb-GSG" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="O6T-SG-iha"/>
-                <constraint firstItem="8dd-xG-ds0" firstAttribute="centerX" secondItem="RX2-Yb-GSG" secondAttribute="centerX" id="aSc-hT-T3x"/>
-                <constraint firstAttribute="bottom" secondItem="RX2-Yb-GSG" secondAttribute="bottom" constant="20" symbolic="YES" id="gRg-Vv-8Vd"/>
-                <constraint firstItem="8dd-xG-ds0" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="20" symbolic="YES" id="jdf-kt-lOn"/>
-                <constraint firstItem="RX2-Yb-GSG" firstAttribute="top" secondItem="8dd-xG-ds0" secondAttribute="bottom" constant="8" symbolic="YES" id="uhQ-ak-dIJ"/>
+                <constraint firstAttribute="bottom" secondItem="RX2-Yb-GSG" secondAttribute="bottom" constant="20" symbolic="YES" id="1IC-29-ULt"/>
+                <constraint firstItem="8dd-xG-ds0" firstAttribute="top" secondItem="c22-O7-iKe" secondAttribute="top" constant="20" symbolic="YES" id="Bee-Tb-e2b"/>
+                <constraint firstAttribute="trailing" secondItem="RX2-Yb-GSG" secondAttribute="trailing" constant="20" symbolic="YES" id="Dfx-P5-Uf1"/>
+                <constraint firstItem="RX2-Yb-GSG" firstAttribute="centerX" secondItem="8dd-xG-ds0" secondAttribute="centerX" id="Y5q-8x-mfn"/>
+                <constraint firstItem="RX2-Yb-GSG" firstAttribute="top" secondItem="8dd-xG-ds0" secondAttribute="bottom" constant="8" symbolic="YES" id="hAK-PH-Pn8"/>
+                <constraint firstItem="RX2-Yb-GSG" firstAttribute="leading" secondItem="c22-O7-iKe" secondAttribute="leading" constant="20" symbolic="YES" id="ykV-kO-EJA"/>
             </constraints>
-            <point key="canvasLocation" x="-3329" y="-84"/>
+            <point key="canvasLocation" x="-4436" y="-156"/>
         </customView>
         <viewController id="Km2-r7-VkK" customClass="NativeEditorController">
             <connections>
@@ -178,5 +224,6 @@
             </connections>
         </viewController>
         <userDefaultsController representsSharedInstance="YES" id="P1I-dK-IR6"/>
+        <collectionViewItem id="4c1-iI-n1m"/>
     </objects>
 </document>

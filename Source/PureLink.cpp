@@ -9,6 +9,7 @@
 #include "PureLink.h"
 #include <fstream>
 #include <sstream>
+#include <map>
 #include <sys/stat.h>
 
 
@@ -97,18 +98,37 @@ PureLink::~PureLink() {
     
     bus->removeListener(this);
     
+    
     if (debug) printf("PureLink: destroying pure link\n");
+    
+    if (debug) printf("deleting widgets vector\n");
+    
+    for (auto& p : widgetMap) {
+        WidgetAction* wa = p.second;
+        if (wa) delete wa;
+    }
+    widgetMap.clear();
+    
+    for (UIWidget* w : widgetVector) {
+        if (w) delete w;
+    }
+    widgetVector.clear();
+    
+    
+    
+    if (debug) printf("deleting blocks\n");
+    
     if (processMidiBuffer) pure_free(processMidiBuffer);
-    if (createEditor) pure_free(createEditor);
+    if (createUI) pure_free(createUI);
     if (block) pure_free(block);
-    if (editor) delete editor;
-    if (editorExpr) pure_free(editorExpr);
     pure_interp* defaultInstance = interpreter.defaultInstance;
     if (interp) {
         pure_interp* local = pure_lock_interp(defaultInstance);
         pure_delete_interp(interp);
         pure_unlock_interp(local);
     }
+    
+    if (debug) printf("PureLink: destroyed\n");
 }
 
 void PureLink::init() {
@@ -126,16 +146,20 @@ void PureLink::init() {
         block = pure_new(evaluated);
         
         
-        int32_t processMidiBufferSymbol = pure_getsym("processMidiBuffer");
+        int32_t processMidiBufferSymbol = pure_getsym("process_midi_buffer");
         if (processMidiBufferSymbol != 0 ) {
             processMidiBuffer = pure_new(pure_symbol(processMidiBufferSymbol));
             pure_interp_compile(interp, processMidiBufferSymbol);
         }
         
-        int32_t createEditorSymbol = pure_getsym("createEditor");
-        if (createEditorSymbol != 0 ) {
-            createEditor = pure_new(pure_symbol(createEditorSymbol));
+        int32_t createUISymbol = pure_getsym("create_ui");
+        if (createUISymbol != 0 ) {
+            createUI = pure_new(pure_symbol(createUISymbol));
+            pure_interp_compile(interp, createUISymbol);
+            initUI();
         }
+
+        
         
         // inject PureLink instance
         int32_t pureLinkInstanceSymbol = pure_sym("pure_link");
@@ -156,6 +180,134 @@ void PureLink::init() {
     }
     pure_unlock_interp(local);
 }
+
+void PureLink::initUI() {
+    pure_expr* exceptions = nullptr;
+    
+    pure_expr* widgets = pure_appxv(createUI, 0, nullptr, &exceptions);
+    if (exceptions) {
+        report(exceptions);
+        return;
+    }
+    
+    int32_t allWidgetsSymbol = pure_getsym("ui::all_widgets");
+    pure_expr* allWidgets = nullptr;
+    if (allWidgetsSymbol) {
+        allWidgets = pure_new(pure_symbol(allWidgetsSymbol));
+        pure_expr* args[] = {widgets};
+        pure_expr* validationResult = pure_appxv(allWidgets, 1, args, &exceptions);
+        if (exceptions) {
+            report(exceptions);
+            return;
+        }
+        int validation;
+        if (pure_is_int(validationResult, &validation) == 0 || validation == 0) {
+            std::string errm = "Could not validate widgets retuned by create_ui call";
+            report(errm);
+            return;
+        }
+        
+        if (debug) printf("widget validation passed\n");
+        
+    } else {
+        std::string errm = "Could not find ui::all_widgets function, UI will not be available";
+        report(errm);
+        return;
+    }
+    
+    std::string m = str(widgets);
+    log("Widgets", m);
+    
+    // process UI
+    
+    size_t size;
+    pure_expr** elems;
+    pure_is_listv(widgets, &size, &elems);  // we're sure it is a list, we just validated that
+    if (size == 0 ) return;  // nothing to do here
+    
+    
+    const std::string typeTagProperty("ui::type_tag") ;
+    const std::string nameProperty("ui::name") ;
+    const std::string actionProperty("ui::action");
+    const std::string valueProperty("ui::value") ;
+
+    
+    for (int i = 0; i < size; i++) {
+        pure_expr* widget = elems[i];
+        int code = 100 + i;
+        int type_tag = widgetIntProperty(widget, typeTagProperty);
+        pure_expr* action = widgetExprProperty(widget, actionProperty);
+        switch (type_tag) {
+            case 100:
+                UIWidgetSlider* slider = new UIWidgetSlider {};
+                slider->code = code;
+                slider->name = widgetStringProperty(widget, nameProperty);
+                slider->value = widgetIntProperty(widget, valueProperty);
+                slider->minimum = widgetIntProperty(widget, "ui::min");
+                slider->maximum = widgetIntProperty(widget, "ui::max");
+                WidgetAction* widgetAction = new WidgetAction { slider, action };
+                widgetMap.insert(std::map<int, WidgetAction*>::value_type(code, widgetAction));
+                widgetVector.push_back(slider);
+                break;
+        }
+    }
+    
+}
+   
+pure_expr* PureLink::widgetExprProperty(const pure_expr* widget, const std::string& name) {
+    int32_t propertySymbol = pure_getsym(name.c_str());
+    pure_expr* propertyFunction = nullptr;
+
+    pure_expr* value = nullptr;
+    if (propertySymbol) {
+        propertyFunction = pure_symbol(propertySymbol);
+        pure_expr* args[] = { (pure_expr*) widget};
+        value = pure_appv(propertyFunction, 1, args);
+        
+    }
+    return value;
+}
+
+        
+int PureLink::widgetIntProperty(const pure_expr* widget, const std::string& name) {
+    int32_t propertySymbol = pure_getsym(name.c_str());
+    pure_expr* propertyFunction = nullptr;
+    int value = 0;
+    if (propertySymbol) {
+        propertyFunction = pure_symbol(propertySymbol);
+        pure_expr* args[] = { (pure_expr*) widget};
+        pure_expr* result = pure_appv(propertyFunction, 1, args);
+        if (!pure_is_int(result, &value)) {
+            std::ostringstream input , output;
+            input << "Warning" << std::endl;
+            output << "Could not read property: " << name << " on widget: " << str(widget) << std::endl << std::endl;
+            log(input.str(), output.str());
+        }
+    }
+    return value;
+}
+        
+std::string PureLink::widgetStringProperty(const pure_expr* widget, const std::string& name) {
+    int32_t propertySymbol = pure_getsym(name.c_str());
+    pure_expr* propertyFunction = nullptr;
+    std::string value = "";
+    if (propertySymbol) {
+        propertyFunction = pure_symbol(propertySymbol);
+        pure_expr* args[] = { (pure_expr*) widget};
+        pure_expr* result = pure_appv(propertyFunction, 1, args);
+        char* buf;
+        if (!pure_is_string_dup(result, &buf)) {
+            std::ostringstream input , output;
+            input << "Warning" << std::endl;
+            output << "Could not read property: " << name << " on widget: " << str(widget) << std::endl << std::endl;
+            log(input.str(), output.str());
+        } else {
+            value = std::string(buf);
+        }
+    }
+
+    return value;
+}
         
 void PureLink::onEvent(const Event& event) {
     switch (event.uiEvent) {
@@ -163,19 +315,54 @@ void PureLink::onEvent(const Event& event) {
             this->logging = event.Configuration.debug;
             this->silenceOnErrors = event.Configuration.silenceOnErrors;
             break;
+        case UIEvent::EditorWidgetChanged:
+            onEditorWidgetChange(event);
+            break;
         default:
             break;
     }
+}
+        
+void PureLink::onEditorWidgetChange(const Event& event) {
+    std::lock_guard<std::mutex> lock(mutex);
+    pure_interp* local = pure_lock_interp(interp);
+    
+    WidgetAction* wa = widgetMap[event.Change.code]; // can this fail?
+    
+    auto updateSlider = [&] {
+        UIWidgetSlider* slider = static_cast<UIWidgetSlider*>(wa->widget);
+        slider->value = event.Change.intValue;
+    };
+    
+    pure_expr* action = wa->action;
+    UIWidgetType wt = wa->widget->widgetType;
+    pure_expr* arg;
+    switch (wt) {
+        case UIWidgetType::Slider:
+            arg = pure_int(event.Change.intValue);
+            updateSlider();
+            break;
+        default:
+            break;
+            
+    }
+    
+    pure_expr* args[] = { arg };
+    pure_expr* exception = nullptr;
+    pure_appxv(action, 1, args, &exception);
+    
+    if (exception) {
+        report(exception);
+    }
+    
+    pure_unlock_interp(local);
+    
 }
 
 void PureLink::callPureFinalize() {
     pure_finalize();
 }
 
-PureEditor* PureLink::getPureEditor() {
-    //std::lock_guard<std::mutex> lock(mutex);
-    return editor;
-}
 
 bool PureLink::hasErrors() {
     //std::lock_guard<std::mutex> lock(mutex);
@@ -192,14 +379,6 @@ const std::string PureLink::getErrors() {
     return errors;
 }
 
-void PureLink::addGuiHook() {
-    if (createEditor == nullptr)
-        return;
-    editor = new PureEditor();
-    editorExpr = pure_pointer(editor);
-    pure_expr* args[] = {editorExpr};
-    pure_appv(createEditor, 1, args);
-}
         
 void PureLink::log(const std::string& ingoing, const std::string& outgoing) {
     
@@ -208,11 +387,37 @@ void PureLink::log(const std::string& ingoing, const std::string& outgoing) {
     output << "[Out] " << outgoing << std::endl << std::endl;
     Event e;
     e.uiEvent = UIEvent::Logging;
-    e.MidiStream.input = input.str();
-    e.MidiStream.output = output.str();
+    e.Logging.input = input.str();
+    e.Logging.output = output.str();
     bus->publishAsync(e);
     
 }
+        
+void PureLink::report(pure_expr* exception) {
+    std::ostringstream m;
+    
+    m << "An exception ("
+      << str(exception)
+      << ") has been thrown while executing your script, please debug your code";
+    
+    errors = m.str();
+    Event e;
+    e.uiEvent = UIEvent::ScriptErrors;
+    e.ScriptData.compilationErrors = errors;
+    
+    bus->publish(e);
+}
+        
+void PureLink::report(std::string& message) {
+    errors = message;
+    Event e;
+    e.uiEvent = UIEvent::ScriptErrors;
+    e.ScriptData.compilationErrors = errors;
+    
+    bus->publish(e);
+}
+        
+
 
 pure_expr* PureLink::createNoteOnMessage(int channel, int note, int velocity, int position) {
     if (debug) printf("PureLink: createNoteOnMessage\n");
@@ -281,13 +486,10 @@ bool PureLink::createMessageFrom(pure_expr* expr, MidiMessage& message, int& pos
             success = true;
         }
     } else {
-        errors =
+        std::string errm =
         "Your script is not returning the supported format.\n"
-        "processMidiBuffer should return a list of tuples, each tuple (e,p) represents a MIDI event 'e' and position 'p'\n";
-        Event e;
-        e.uiEvent = UIEvent::ScriptErrors;
-        e.ScriptData.compilationErrors = errors;
-        bus->publish(e);
+        "process_midi_buffer should return a list of tuples, each tuple (e,p) represents a MIDI event 'e' and position 'p'\n";
+        report(errm);
     }
     
     return success;
@@ -304,7 +506,7 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
 
     pure_interp* local = pure_lock_interp(interp);
     
-    if (debug) printf("PureLink: processBlock\n");
+    //if (debug) printf("PureLink: processBlock\n");
     
     MidiBuffer output;
     MidiBuffer::Iterator inputItr(input);
@@ -347,15 +549,7 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
             pure_expr* exceptions = nullptr;
             pure_expr* result = pure_appxv(processMidiBuffer, 1, args, &exceptions);
             if (exceptions) {
-                errors =
-                  "An exception (" +
-                  std::string(str(exceptions)) +
-                  ") has been thrown while executing your script, please debug your code";
-                Event e;
-                e.uiEvent = UIEvent::ScriptErrors;
-                e.ScriptData.compilationErrors = errors;
-                
-                bus->publish(e);
+                report(exceptions);
             } else {
                 
                 if (logging) {
@@ -377,13 +571,10 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
                         
                     }
                 } else {
-                    errors =
+                    std::string errm =
                     "Your script is not returning the supported format.\n"
-                    "processMidiBuffer should return a list of tuples, each tuple (e,p) represents a MIDI event 'e' and position 'p'\n";
-                    Event e;
-                    e.uiEvent = UIEvent::ScriptErrors;
-                    e.ScriptData.compilationErrors = errors;
-                    bus->publish(e);
+                    "process_midi_buffer should return a list of tuples, each tuple (e,p) represents a MIDI event 'e' and position 'p'\n";
+                    report(errm);
                 }
             }
         }

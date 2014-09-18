@@ -7,7 +7,9 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "CustomControls.h"
 #include "MessageBus.h"
+#include <map>
 
 class NativeEditorControllerListener;
 

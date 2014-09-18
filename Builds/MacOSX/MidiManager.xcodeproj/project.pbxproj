@@ -21,6 +21,8 @@
 		37FE1F5A53AD07541BBA8DE0 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD35C0038EAA9DDE7E58B55 /* QuartzCore.framework */; };
 		3A9E22824F4985006A2EFA10 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD54813E223925E2EC7721B /* QTKit.framework */; };
 		3D0CF0EC19BB7B700086BE3A /* PureEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3D0CF0EB19BB7B700086BE3A /* PureEditor.cpp */; };
+		3D60FA6419C9471F0064F2E9 /* CustomControls.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D60FA6319C9471F0064F2E9 /* CustomControls.m */; };
+		3D60FA6719CA0CA60064F2E9 /* ui.pure in Resources */ = {isa = PBXBuildFile; fileRef = 3D60FA6619CA0CA60064F2E9 /* ui.pure */; };
 		3D776ECB19B3007A000E1808 /* PureLink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3D776EC919B3007A000E1808 /* PureLink.cpp */; };
 		3DC0789E19B6266C00114325 /* JuceCocoa.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DC0789D19B6266C00114325 /* JuceCocoa.mm */; };
 		3DC078A119B62C0100114325 /* NativeEditorView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3DC078A019B62C0100114325 /* NativeEditorView.xib */; };
@@ -277,6 +279,9 @@
 		3D0CF0EA19BB7A5F0086BE3A /* PureLink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PureLink.h; path = ../../Source/PureLink.h; sourceTree = "<group>"; };
 		3D0CF0EB19BB7B700086BE3A /* PureEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PureEditor.cpp; path = ../../Source/PureEditor.cpp; sourceTree = "<group>"; };
 		3D60ABE619BCF7AE00898222 /* ThreadPool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ThreadPool.h; path = ../../Source/Messaging/ThreadPool.h; sourceTree = "<group>"; };
+		3D60FA6319C9471F0064F2E9 /* CustomControls.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CustomControls.m; path = ../../Source/UI/CustomControls.m; sourceTree = "<group>"; };
+		3D60FA6519C950B00064F2E9 /* CustomControls.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CustomControls.h; path = ../../Source/UI/CustomControls.h; sourceTree = "<group>"; };
+		3D60FA6619CA0CA60064F2E9 /* ui.pure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = ui.pure; sourceTree = "<group>"; };
 		3D776EC919B3007A000E1808 /* PureLink.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PureLink.cpp; path = ../../Source/PureLink.cpp; sourceTree = "<group>"; };
 		3D7D199BD278C755A6B5845E /* juce_Label.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = juce_Label.h; path = ../../JuceLibraryCode/modules/juce_gui_basics/widgets/juce_Label.h; sourceTree = SOURCE_ROOT; };
 		3DC0789C19B6239A00114325 /* JuceCocoa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JuceCocoa.h; path = ../../Source/UI/JuceCocoa.h; sourceTree = "<group>"; };
@@ -1338,6 +1343,8 @@
 				3DC078A019B62C0100114325 /* NativeEditorView.xib */,
 				3DC078A519B6319300114325 /* NativeEditorController.h */,
 				3DC078A619B6319300114325 /* NativeEditorController.mm */,
+				3D60FA6319C9471F0064F2E9 /* CustomControls.m */,
+				3D60FA6519C950B00064F2E9 /* CustomControls.h */,
 			);
 			name = UI;
 			sourceTree = "<group>";
@@ -1354,6 +1361,7 @@
 		3DF0A9A119BBAE3400FA6508 /* Pure */ = {
 			isa = PBXGroup;
 			children = (
+				3D60FA6619CA0CA60064F2E9 /* ui.pure */,
 				3DF0A9A219BBAE3400FA6508 /* midi.pure */,
 			);
 			path = Pure;
@@ -2893,6 +2901,7 @@
 				3DC078A119B62C0100114325 /* NativeEditorView.xib in Resources */,
 				BA11A9C78D1E88BB70CDD898 /* RecentFilesMenuTemplate.nib in Resources */,
 				3DF0A9A519BBAE3400FA6508 /* midi.pure in Resources */,
+				3D60FA6719CA0CA60064F2E9 /* ui.pure in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2958,6 +2967,7 @@
 				3FED5AFE2208B868C2AD5941 /* juce_RTAS_Wrapper.cpp in Sources */,
 				D6156D29516D6E344D165B6B /* juce_video.mm in Sources */,
 				41D8E89F869B2E7520DD628A /* juce_VST_Wrapper.cpp in Sources */,
+				3D60FA6419C9471F0064F2E9 /* CustomControls.m in Sources */,
 				223AEF2131121F2BFA670310 /* juce_VST_Wrapper.mm in Sources */,
 				1F18E0C4E5935C3EE7344194 /* juce_VST3_Wrapper.cpp in Sources */,
 				AD941628D93F631CECE6B19A /* juce_VST3_Wrapper.mm in Sources */,

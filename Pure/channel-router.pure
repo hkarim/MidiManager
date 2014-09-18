@@ -3,7 +3,7 @@ using midi;
 
 const channel_dict = dict [ 0 => 1 , 1 => 2 ];
 
-processMidiBuffer buf =
+process_midi_buffer buf::midi_buffer_t =
   map change_channel buf with
   change_channel t =
       if member channel_dict (get_channel t)

@@ -1,0 +1,28 @@
+#! --nosymbolic
+namespace ui;
+
+interface widget with
+  type_tag    c::widget;
+  name        c::widget;
+  action      c::widget;
+  value       c::widget;
+end;
+
+is_widget = typep widget;
+all_widgets = all is_widget;
+
+type widget_list_t xs::list = all_widgets xs;
+
+
+type slider (Slider name::string value::int minimum::int maximum::int action) =
+  minimum < maximum && value >= minimum && value <= maximum;
+
+const slider_type_tag = 100;
+type_tag s::slider = slider_type_tag;
+
+name    (Slider n _ _ _ _) = n;
+value   (Slider _ v _ _ _) = v;
+min     (Slider _ _ m _ _) = m;
+max     (Slider _ _ _ m _) = m;
+action  (Slider _ _ _ _ a) = a;
+

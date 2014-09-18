@@ -10,7 +10,7 @@ const minor7b5     = [0,3,6,10];
 const transposition = 0;
 
 
-processMidiBuffer buf::midi_buffer_t = 
+process_midi_buffer buf::midi_buffer_t = 
   output when
     [notes, other] = split_notes buf;
     output = (catmap process notes) + other;

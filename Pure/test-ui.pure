@@ -1,0 +1,18 @@
+using ui;
+
+using "lib:Jeelona MidiManager";
+
+private extern void pure_link_debug(expr*, char*);
+private extern void puts(char*);
+
+debug message::string = pure_link_debug pure_link message;
+
+
+onSliderChanged sender::string value::int = debug (sender + " sent value: " + (str value));
+
+s1 = ui::Slider "The Ultimate One" 10 0 15 (onSliderChanged "From One");
+s2 = ui::Slider "Another One" 7 0 15 (onSliderChanged "From Two");
+
+create_ui = [s1,s2]; 
+
+

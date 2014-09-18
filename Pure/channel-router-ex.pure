@@ -7,7 +7,7 @@ type range (Range lower::int upper::int) = lower <= upper;
 
 const channel_dict = dict [ Range 0 80 => 0 , Range 81 127 => 1 ];
 
-processMidiBuffer buf =
+process_midi_buffer buf::midi_buffer_t =
   map change_channel buf with
     change_channel t =
       result with 

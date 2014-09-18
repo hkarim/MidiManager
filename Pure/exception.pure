@@ -11,7 +11,7 @@ chord_add n::int = put chordref (chord_set + set [n]);
 chord_rm  n::int = put chordref (chord_set - set [n]);
 let c_0 = 0;
 
-processMidiBuffer buf = // buf is on the form [(event, position)...]
+process_midi_buffer buf::midi_buffer_t = // buf is on the form [(event, position)...]
   result with
     messages = to_message_t buf;  // convert to the form [Message ...]
     notes_on_off = 

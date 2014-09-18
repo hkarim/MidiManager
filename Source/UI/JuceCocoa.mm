@@ -19,6 +19,14 @@ JuceCocoa::~JuceCocoa() {
     bus->removeListener(this);
 }
 
+void JuceCocoa::releaseController() {
+    if (this->controller != nil) {
+        NativeEditorController* c = (NativeEditorController*) this->controller;
+        [c release];
+    }
+    
+}
+
 void* JuceCocoa::createNSView() {
     
     String currentEx = File::getSpecialLocation(File::SpecialLocationType::currentApplicationFile).getFullPathName();
@@ -47,42 +55,7 @@ void* JuceCocoa::createNSView() {
 
 
 void JuceCocoa::onEvent(const Event& event) {
-    /*
-    switch (event.uiEvent) {
-        case UIEvent::ScriptErrors:
-            if (controller) {
-                //NSLog(@"ScriptErrors: %s", event.ScriptData.compilationErrors);
-                NativeEditorController* c = (NativeEditorController*) controller;
-                [c setErrors:[NSString stringWithFormat:@"%s", event.ScriptData.compilationErrors.c_str()]];
-            }
-            break;
-        case UIEvent::EditorRestoreState:
-            if (controller) {
-                //NSLog(@"FileChosen: %s", event.FileData.filename);
-                NativeEditorController* c = (NativeEditorController*) controller;
-                [c setLoadedFileName:[NSString stringWithFormat:@"%s", event.FileData.filename.c_str()]];
-                if (!event.ScriptData.compilationErrors.empty()) {
-                    [c setErrors:[NSString stringWithFormat:@"%s", event.ScriptData.compilationErrors.c_str()]];
-                } else {
-                    [c setErrors:@"Compiled Successfully"];
-                }
-                
-            }
-            break;
-        
-        case UIEvent::Logging:
-            if (controller) {
-                NativeEditorController* c = (NativeEditorController*) controller;
-                NSString* in = [NSString stringWithFormat:@"%s", event.MidiStream.input.c_str()];
-                NSString* out = [NSString stringWithFormat:@"%s", event.MidiStream.output.c_str()];
-                [c log:in withOutput:out];
-            }
-            break;
-            
-        default:
-            break;
-    }
-    */
+    
 }
 
 

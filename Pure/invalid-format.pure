@@ -1,6 +1,6 @@
 
 
 
-processMidiBuffer buf = nothing;
+process_midi_buffer buf::midi_buffer_t = nothing;
 
 

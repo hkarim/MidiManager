@@ -65,8 +65,12 @@ void MidiManagerAudioProcessor::restoreEditorState() {
         e.ScriptData.compilationErrors = pureLink->getErrors();
         bus->publish(e);
     } else {
-        e.ScriptData.compilationErrors = "Compiled Successfully";
+        e.ScriptData.compilationErrors = "";
         e.FileData.filename = pureLink->getFilename();
+        auto widgets = pureLink->getWidgets();
+        if (!widgets.empty()) {
+            e.UI.widgets = widgets;
+        }
         bus->publish(e);
     }
     

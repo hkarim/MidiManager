@@ -10,7 +10,7 @@ chord_add n::int = put chordref (insert (get chordref) n);
 chord_rm  n::int = put chordref (delete (get chordref) n);
 let c_0 = 0;
 
-processMidiBuffer buf::midi_buffer_t = // buf is on the form [(event, position)...]
+process_midi_buffer buf::midi_buffer_t = // buf is on the form [(event, position)...]
   result with
 
     split buf::midi_buffer_t =
