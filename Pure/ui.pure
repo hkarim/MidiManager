@@ -1,4 +1,7 @@
 #! --nosymbolic
+
+using native;
+
 namespace ui;
 
 interface widget with
@@ -13,6 +16,8 @@ all_widgets = all is_widget;
 
 type widget_list_t xs::list = all_widgets xs;
 
+//widget_int_value w::widget = native_widget_int_value widget;
+
 
 type slider (Slider name::string value::int minimum::int maximum::int action) =
   minimum < maximum && value >= minimum && value <= maximum;
@@ -25,4 +30,38 @@ value   (Slider _ v _ _ _) = v;
 min     (Slider _ _ m _ _) = m;
 max     (Slider _ _ _ m _) = m;
 action  (Slider _ _ _ _ a) = a;
+
+type segmented (Segmented name::string value::int labels::list action) = all (typep string) labels;
+
+const segmented_type_tag = 101;
+type_tag s::segmented = segmented_type_tag;
+
+name    (Segmented n _ _ _) = n;
+value   (Segmented _ v _ _) = v;
+labels  (Segmented _ _ l _) = l;
+action  (Segmented _ _ _ a) = a;
+
+type pop_up (PopUp name::string value::int labels::list action) =  all (typep string) labels;
+
+const pop_up_type_tag = 102;
+type_tag s::pop_up = pop_up_type_tag;
+
+name    (PopUp n _ _ _) = n;
+value   (PopUp _ v _ _) = v;
+labels  (PopUp _ _ l _) = l;
+action  (PopUp _ _ _ a) = a;
+
+
+type check_box (CheckBox name::string value::int action) = true;
+
+const check_box_type_tag = 103;
+type_tag s::check_box = check_box_type_tag;
+
+name    (CheckBox n _ _) = n;
+value   (CheckBox _ v _) = v;
+action  (CheckBox _ _ a) = a;
+
+
+
+
 

@@ -1,14 +1,24 @@
 using midi;
+using ui;
 using set;
 
-let pattern_ch = 0;
-let chord_ch   = 1;
-let output_ch  = 0;
+let pattern_ch_ref = ref 0;
+pattern_ch         = get pattern_ch_ref;
+let chord_ch_ref   = ref 1;
+chord_ch           = get chord_ch_ref;
+let output_ch_ref  = ref 0;
+output_ch          = get output_ch_ref;
+
+pattern_ch_control = ui::Slider "Pattern Channel" (pattern_ch+1) 1 16 (\v-> put pattern_ch_ref (v-1));
+chord_ch_control = ui::Slider "Chord Channel" (chord_ch+1) 1 16 (\v-> put chord_ch_ref (v-1));
+output_ch_control = ui::Slider "Output Channel" (output_ch+1) 1 16 (\v-> put output_ch_ref (v-1));
+
 let chordref = ref (set []);
 chord = list (get chordref);
 chord_add n::int = put chordref (insert (get chordref) n);
 chord_rm  n::int = put chordref (delete (get chordref) n);
-let c_0 = 0;
+
+create_ui = [pattern_ch_control, chord_ch_control, output_ch_control];
 
 process_midi_buffer buf::midi_buffer_t = // buf is on the form [(event, position)...]
   result with

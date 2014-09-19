@@ -10,6 +10,7 @@
 #import "CustomControls.h"
 #include "MessageBus.h"
 #include <map>
+#include <mutex>
 
 class NativeEditorControllerListener;
 
@@ -19,6 +20,7 @@ class NativeEditorControllerListener;
     BOOL debug;
     BOOL silenceOnErrors;
     NativeEditorControllerListener* listener;
+    std::mutex mutex;
 }
 
 
@@ -48,6 +50,7 @@ private:
 public:
     NativeEditorControllerListener(NativeEditorController* controller, MessageBus* bus) :
     EventListener {}, controller { controller }, bus { bus } {
+        printf("NativeEditorControllerListener: %p\n", this);
         bus->addListener(this);
     }
     ~NativeEditorControllerListener() {

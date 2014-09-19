@@ -14,11 +14,7 @@
 @property (copy) NSString* currentStringValue;
 @property (readonly) NSView* view;
 
-//-(int) controlCode;
-//-(NSString*) name;
-//-(int) currentIntValue;
-//-(NSString*) currentStringValue;
-//-(NSView*) view;
+-(void) createControls;
 
 @end
 
@@ -26,27 +22,11 @@
 @end
 
 @interface EditorScrollView : NSScrollView
-
 @end
 
 
 
-@interface SliderView : NSView <CustomControl> {
-    int controlCode;
-    NSTextField* label;
-    NSSlider* slider;
-    NSTextField* indicator;
-    CGFloat width;
-    NSString* name;
-    
-    int sliderMin;
-    int sliderMax;
-    int sliderCurrent;
-    
-    id sliderActionTarget;
-    SEL sliderAction;
-    
-}
+@interface SliderView : NSView <CustomControl>
 
 @property int controlCode;
 @property (readonly) NSTextField* label;
@@ -57,12 +37,61 @@
 
 @property int sliderMin;
 @property int sliderMax;
-@property int sliderCurrent;
+@property int controlCurrentValue;
 
-@property (assign) id sliderActionTarget;
-@property SEL sliderAction;
+@property (assign) id controlActionTarget;
+@property SEL controlAction;
 
 
 -(void) createControls;
 
 @end
+
+@interface SegmentedView : NSView <CustomControl>
+
+@property int controlCode;
+@property (readonly) NSTextField* label;
+@property (readonly) NSSegmentedControl* segmentedControl;
+@property CGFloat width;
+@property (copy) NSString* name;
+@property (copy) NSArray* buttonLabels;
+@property int controlCurrentValue;
+
+@property (assign) id controlActionTarget;
+@property SEL controlAction;
+
+@end
+
+
+
+@interface PopUpView : NSView <CustomControl>
+@property int controlCode;
+@property (readonly) NSTextField* label;
+@property (readonly) NSPopUpButton* popupControl;
+@property CGFloat width;
+@property (copy) NSString* name;
+@property (copy) NSArray* menuLabels;
+@property int controlCurrentValue;
+
+@property (assign) id controlActionTarget;
+@property SEL controlAction;
+
+@end
+
+@interface CheckBoxView : NSView <CustomControl>
+@property int controlCode;
+@property (readonly) NSTextField* label;
+@property (readonly) NSButton* buttonControl;
+@property CGFloat width;
+@property (copy) NSString* name;
+@property int controlCurrentValue;
+
+@property (assign) id controlActionTarget;
+@property SEL controlAction;
+
+@end
+
+
+
+
+

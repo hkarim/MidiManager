@@ -1,18 +1,19 @@
 using ui;
+using midi;
+using system;
 
-using "lib:Jeelona MidiManager";
-
-private extern void pure_link_debug(expr*, char*);
-private extern void puts(char*);
-
-debug message::string = pure_link_debug pure_link message;
+let output_channel_ref = ref 0;
+output_channel = get output_channel_ref;
 
 
-onSliderChanged sender::string value::int = debug (sender + " sent value: " + (str value));
+channel    = ui::Slider "Output Channel" (output_channel+1) 1 16 (\v -> put output_channel_ref (v-1));
+scale_root = ui::Segmented "Scale Root" 0 ["C","D","E","F","G","A","B"] (\v -> v); 
+scale      = ui::Segmented "Scale" 0 ["Major", "Minor"] (\v -> v);
+popup      = ui::PopUp "Options" 0 ["Harmonize", "Chordize"] (\v -> v);
+checkbox   = ui::CheckBox "Did You Like It?" 1 (\v -> v);
 
-s1 = ui::Slider "The Ultimate One" 10 0 15 (onSliderChanged "From One");
-s2 = ui::Slider "Another One" 7 0 15 (onSliderChanged "From Two");
+create_ui = [channel,scale_root,scale, popup, checkbox];
 
-create_ui = [s1,s2]; 
+process_midi_buffer buf::midi_buffer_t = map (\ep -> set_channel ep output_channel) buf;
 
 

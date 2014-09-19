@@ -20,7 +20,7 @@
 		2D281025F7DA145DCEED65E4 /* juce_AAX_Wrapper.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8EFBFD42C7EE17ED5C0D2D40 /* juce_AAX_Wrapper.mm */; };
 		37FE1F5A53AD07541BBA8DE0 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD35C0038EAA9DDE7E58B55 /* QuartzCore.framework */; };
 		3A9E22824F4985006A2EFA10 /* QTKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1FD54813E223925E2EC7721B /* QTKit.framework */; };
-		3D0CF0EC19BB7B700086BE3A /* PureEditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3D0CF0EB19BB7B700086BE3A /* PureEditor.cpp */; };
+		3D45782A19CBDC26001EDB88 /* native.pure in Resources */ = {isa = PBXBuildFile; fileRef = 3D45782919CBDC26001EDB88 /* native.pure */; };
 		3D60FA6419C9471F0064F2E9 /* CustomControls.m in Sources */ = {isa = PBXBuildFile; fileRef = 3D60FA6319C9471F0064F2E9 /* CustomControls.m */; };
 		3D60FA6719CA0CA60064F2E9 /* ui.pure in Resources */ = {isa = PBXBuildFile; fileRef = 3D60FA6619CA0CA60064F2E9 /* ui.pure */; };
 		3D776ECB19B3007A000E1808 /* PureLink.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3D776EC919B3007A000E1808 /* PureLink.cpp */; };
@@ -277,7 +277,7 @@
 		3BBD4CCA8ECC216F5556D868 /* juce_MarkerList.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_MarkerList.cpp; path = ../../JuceLibraryCode/modules/juce_gui_basics/positioning/juce_MarkerList.cpp; sourceTree = SOURCE_ROOT; };
 		3CCB0C008EB960E1040B711B /* juce_ResizableEdgeComponent.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_ResizableEdgeComponent.cpp; path = ../../JuceLibraryCode/modules/juce_gui_basics/layout/juce_ResizableEdgeComponent.cpp; sourceTree = SOURCE_ROOT; };
 		3D0CF0EA19BB7A5F0086BE3A /* PureLink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PureLink.h; path = ../../Source/PureLink.h; sourceTree = "<group>"; };
-		3D0CF0EB19BB7B700086BE3A /* PureEditor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PureEditor.cpp; path = ../../Source/PureEditor.cpp; sourceTree = "<group>"; };
+		3D45782919CBDC26001EDB88 /* native.pure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = native.pure; sourceTree = "<group>"; };
 		3D60ABE619BCF7AE00898222 /* ThreadPool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ThreadPool.h; path = ../../Source/Messaging/ThreadPool.h; sourceTree = "<group>"; };
 		3D60FA6319C9471F0064F2E9 /* CustomControls.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = CustomControls.m; path = ../../Source/UI/CustomControls.m; sourceTree = "<group>"; };
 		3D60FA6519C950B00064F2E9 /* CustomControls.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CustomControls.h; path = ../../Source/UI/CustomControls.h; sourceTree = "<group>"; };
@@ -289,7 +289,6 @@
 		3DC078A019B62C0100114325 /* NativeEditorView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = NativeEditorView.xib; path = ../../Source/UI/NativeEditorView.xib; sourceTree = "<group>"; };
 		3DC078A519B6319300114325 /* NativeEditorController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NativeEditorController.h; path = ../../Source/UI/NativeEditorController.h; sourceTree = "<group>"; };
 		3DC078A619B6319300114325 /* NativeEditorController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = NativeEditorController.mm; path = ../../Source/UI/NativeEditorController.mm; sourceTree = "<group>"; };
-		3DC184E519B4706200472951 /* PureEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = PureEditor.h; path = ../../Source/PureEditor.h; sourceTree = "<group>"; };
 		3DDC94EC19B745FA006D6059 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		3DDC94F019B76C8D006D6059 /* MessageBus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MessageBus.h; path = ../../Source/Messaging/MessageBus.h; sourceTree = "<group>"; };
 		3DF0A9A219BBAE3400FA6508 /* midi.pure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = midi.pure; sourceTree = "<group>"; };
@@ -1219,8 +1218,6 @@
 				3D776EC919B3007A000E1808 /* PureLink.cpp */,
 				044223EE3C44BCD441558388 /* PluginEditor.h */,
 				EA574430871E991BFA69B679 /* PluginEditor.cpp */,
-				3DC184E519B4706200472951 /* PureEditor.h */,
-				3D0CF0EB19BB7B700086BE3A /* PureEditor.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -1361,6 +1358,7 @@
 		3DF0A9A119BBAE3400FA6508 /* Pure */ = {
 			isa = PBXGroup;
 			children = (
+				3D45782919CBDC26001EDB88 /* native.pure */,
 				3D60FA6619CA0CA60064F2E9 /* ui.pure */,
 				3DF0A9A219BBAE3400FA6508 /* midi.pure */,
 			);
@@ -2899,6 +2897,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3DC078A119B62C0100114325 /* NativeEditorView.xib in Resources */,
+				3D45782A19CBDC26001EDB88 /* native.pure in Resources */,
 				BA11A9C78D1E88BB70CDD898 /* RecentFilesMenuTemplate.nib in Resources */,
 				3DF0A9A519BBAE3400FA6508 /* midi.pure in Resources */,
 				3D60FA6719CA0CA60064F2E9 /* ui.pure in Resources */,
@@ -2963,7 +2962,6 @@
 				FE2B06670E5404D9693A2CDD /* juce_RTAS_DigiCode2.cpp in Sources */,
 				78A3C79E860917A73B2EBD29 /* juce_RTAS_DigiCode3.cpp in Sources */,
 				6AFB5C2FAB25E4F6D1C4F8F9 /* juce_RTAS_MacUtilities.mm in Sources */,
-				3D0CF0EC19BB7B700086BE3A /* PureEditor.cpp in Sources */,
 				3FED5AFE2208B868C2AD5941 /* juce_RTAS_Wrapper.cpp in Sources */,
 				D6156D29516D6E344D165B6B /* juce_video.mm in Sources */,
 				41D8E89F869B2E7520DD628A /* juce_VST_Wrapper.cpp in Sources */,
@@ -2981,7 +2979,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
@@ -3089,7 +3087,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_CXX_LANGUAGE_STANDARD = "c++14";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;

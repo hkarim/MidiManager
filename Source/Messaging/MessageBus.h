@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <string>
+#include <mutex>
 #include "ThreadPool.h"
 
 #ifndef __MidiManager__MessageBus__
@@ -28,13 +29,36 @@ enum class UIEvent : unsigned int {
 };
 
 enum class UIWidgetType : int {
-    Slider = 100
+    Unkown = -1, Slider = 100, Segmented = 101, PopUp = 102, CheckBox = 103
 };
+
+inline UIWidgetType uiWidgetType(const int tag) {
+    switch (tag) {
+        case 100:
+            return UIWidgetType::Slider;
+            break;
+        case 101:
+            return UIWidgetType::Segmented;
+            break;
+        case 102:
+            return UIWidgetType::PopUp;
+            break;
+        case 103:
+            return UIWidgetType::CheckBox;
+            break;
+            
+        default:
+            return UIWidgetType::Unkown;
+            break;
+    }
+}
 
 struct UIWidget {
     UIWidgetType widgetType;
     int code;
     std::string name;
+    virtual ~UIWidget() {}
+    virtual int currentIntValue() { return 0; }
 };
 
 struct UIWidgetSlider : UIWidget {
@@ -42,6 +66,27 @@ struct UIWidgetSlider : UIWidget {
     int minimum;
     int maximum;
     int value;
+    virtual int currentIntValue() { return value; }
+};
+    
+struct UIWidgetSegmented : UIWidget {
+    UIWidgetSegmented() : UIWidget {} { widgetType = UIWidgetType::Segmented; }
+    int value;
+    std::vector<std::string> labels;
+    virtual int currentIntValue() { return value; }
+};
+
+struct UIWidgetPopUp : UIWidget {
+    UIWidgetPopUp() : UIWidget {} { widgetType = UIWidgetType::PopUp; }
+    int value;
+    std::vector<std::string> labels;
+    virtual int currentIntValue() { return value; }
+};
+    
+struct UIWidgetCheckBox : UIWidget {
+    UIWidgetCheckBox() : UIWidget {} { widgetType = UIWidgetType::CheckBox; }
+    int value;
+    virtual int currentIntValue() { return value; }
 };
 
 struct Event {
@@ -97,25 +142,37 @@ private:
 public:
     MessageBus() : listeners { }, pool { 8 } { }
     void addListener(EventListener* listener) {
-        //printf("adding listener: %p\n", listener);
+        //printf("<MessageBus-%p> adding listener: %p\n", this, listener);
         listeners.push_back(listener);
+        //printf("<MessageBus-%p> current size: %lu\n", this, listeners.size());
     }
     
     void removeListener(EventListener* listener) {
-        //printf("removing listener: %p\n", listener);
+        //printf("<MessageBus-%p> removing listener: %p\n", this, listener);
         auto itr = std::find(listeners.begin(), listeners.end(), listener);
         listeners.erase(itr);
+        //printf("<MessageBus-%p> current size: %lu\n", this, listeners.size());
     }
     
     void publish(const Event& event) {
-        //printf("publishing event, listeners size = %lu\n", listeners.size());
-        for (auto l : listeners) {
-            l->onEvent(event);  
+        //printf("<MessageBus-%p> publishing event, listeners size = %lu\n", this, listeners.size());
+        /*
+        for (auto& l : listeners) {
+            printf("<MessageBus-%p> invoking listener: %p\n", this, l);
+            l->onEvent(event);
+        }
+         */
+        
+        for (int i = 0; i < listeners.size(); i++) {
+            //printf("<MessageBus-%p> invoking listener: %p\n", this, listeners[i]);
+            listeners[i]->onEvent(event);
         }
     }
     
     void publishAsync(const Event& event) {
-        for (auto l : listeners) {
+        //printf("<MessageBus-%p> async publishing event, listeners size = %lu\n", this, listeners.size());
+        for (auto& l : listeners) {
+            //printf("<MessageBus-%p> async invoking listener: %p\n", this, l);
             pool.enqueue([=](Event e) { l->onEvent(e); }, event);
         }
     }

@@ -9,12 +9,14 @@
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "../../Source/PureLink.cpp"
-            timestampString = "432724770.947983"
+            filePath = "../../Source/UI/NativeEditorController.mm"
+            timestampString = "432837948.476242"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "330"
-            endingLineNumber = "330">
+            startingLineNumber = "40"
+            endingLineNumber = "40"
+            landmarkName = "-createWidget:"
+            landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

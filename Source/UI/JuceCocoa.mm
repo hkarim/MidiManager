@@ -12,6 +12,7 @@
 
 
 JuceCocoa::JuceCocoa(MessageBus* bus) : EventListener(), bus(bus) {
+    printf("JuceCocoa: %p\n", this);
     bus->addListener(this);
 }
 

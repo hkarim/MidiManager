@@ -20,7 +20,7 @@
 MidiManagerAudioProcessorEditor::MidiManagerAudioProcessorEditor (MidiManagerAudioProcessor* ownerFilter)
     : AudioProcessorEditor (ownerFilter), EventListener(), nsviewComponent()
 {
-
+    printf("MidiManagerAudioProcessorEditor: %p\n", this);
     bus = ownerFilter->getMessageBus();
     bus->addListener(this);
     
@@ -28,9 +28,6 @@ MidiManagerAudioProcessorEditor::MidiManagerAudioProcessorEditor (MidiManagerAud
     void* view = ownerFilter->getJuceCocoa()->createNSView();
     nsviewComponent.setView(view);
     setSize(currentWidth, currentHeight);
-    
-    
-    
 }
 
 MidiManagerAudioProcessorEditor::~MidiManagerAudioProcessorEditor()

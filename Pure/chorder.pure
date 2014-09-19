@@ -1,14 +1,120 @@
 using midi;
+using ui;
+using native;
 
 const major        = [0,4,7];
 const major7       = [0,4,7,11];
+const major9       = [0,4,7,11,14];
+const major11      = [0,4,7,11,14,17];
+const major13      = [0,4,7,11,14,21];
 const dom7         = [0,4,7,10];
 const minor        = [0,3,7];
 const minor7       = [0,3,7,10];
 const minor7b5     = [0,3,6,10];
+const sus4         = [0,5,7,11];
 
-const transposition = 0;
+scale =  ["C","C#","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
 
+tonic = ["Maj", "Maj7", "Maj9", "Maj11", "Maj13"];
+let tonic_chord_ref = ref major;
+tonic_chord = get tonic_chord_ref;
+tonic_f index = 
+  case index of
+    0 = put tonic_chord_ref major;
+    1 = put tonic_chord_ref major7;
+    2 = put tonic_chord_ref major9;
+    3 = put tonic_chord_ref major11;
+    4 = put tonic_chord_ref major13;
+  end;
+
+supertonic = ["m", "m6", "m7", "m9", "m11"];
+let supertonic_chord_ref = ref minor;
+supertonic_chord = get supertonic_chord_ref;
+supertonic_f index =
+  case index of
+    0 = put supertonic_chord_ref minor;
+    1 = put supertonic_chord_ref minor7;
+    2 = put supertonic_chord_ref minor7;
+    3 = put supertonic_chord_ref minor7;
+    4 = put supertonic_chord_ref minor7;
+  end;
+
+mediant = ["m", "m7"];
+let mediant_chord_ref = ref minor;
+mediant_chord = get mediant_chord_ref;
+mediant_f index = 
+  case index of
+    0 = put mediant_chord_ref minor;
+    1 = put mediant_chord_ref minor7;
+  end;
+
+subdominant = ["Maj", "Maj7", "Maj9", "Maj13/6"];
+let subdominant_chord_ref = ref major;
+subdominant_chord = get subdominant_chord_ref;
+subdominant_f index =
+  case index of
+    0 = put subdominant_chord_ref major;
+    1 = put subdominant_chord_ref major7;
+    2 = put subdominant_chord_ref major7;
+    3 = put subdominant_chord_ref major7;
+  end;
+
+dominant = ["Maj", "7", "11", "sus4", "13"];
+let dominant_chord_ref = ref major;
+dominant_chord = get dominant_chord_ref;
+dominant_f index =
+  case index of
+    0 = put dominant_chord_ref major;
+    1 = put dominant_chord_ref dom7;
+    2 = put dominant_chord_ref major7;
+    3 = put dominant_chord_ref sus4;
+    4 = put dominant_chord_ref major7;
+  end;
+
+submediant = ["m", "m7", "m9", "m11"];
+let submediant_chord_ref = ref minor;
+submediant_chord = get submediant_chord_ref;
+submediant_f index = 
+  case index of
+    0 = put submediant_chord_ref minor;
+    1 = put submediant_chord_ref minor7;
+    2 = put submediant_chord_ref minor7;
+    3 = put submediant_chord_ref minor7;
+  end;
+
+leading = ["m7b5"];
+let leading_chord_ref = ref minor7b5;
+leading_chord = get leading_chord_ref;
+leading_f index = 
+  case index of
+    0 = put leading_chord_ref minor7b5;
+  end;
+
+tonic_control = ui::Segmented "Tonic" 0 tonic tonic_f;
+supertonic_control = ui::Segmented "Supertonic" 0 supertonic supertonic_f;
+mediant_control = ui::Segmented "Mediant" 0 mediant mediant_f;
+subdominant_control = ui::Segmented "Subdominant" 0 subdominant subdominant_f;
+dominant_control = ui::Segmented "Dominant" 0 dominant dominant_f;
+submediant_control = ui::Segmented "Submediant" 0 submediant submediant_f;
+leading_control = ui::Segmented "Leading" 0 leading leading_f;
+
+
+
+let transposition_ref = ref 0;
+transposition = get transposition_ref;
+
+transposition_control = 
+  ui::Segmented "Scale" transposition scale (put transposition_ref);
+
+create_ui =
+  [transposition_control,
+  tonic_control,
+  supertonic_control,
+  mediant_control,
+  subdominant_control,
+  dominant_control,
+  submediant_control,
+  leading_control];
 
 process_midi_buffer buf::midi_buffer_t = 
   output when
@@ -24,16 +130,40 @@ split_notes xs::list =
 
 process t::event_position_t = if is_note_on_or_off t then chord_on_off (pick_interval t) t else [];
 
+chord_name t::event_position_t =
+  result with
+    nor = ((get_note t) - transposition) mod 12;
+    name = scale ! nor;
+    chord_degree =
+      case nor of
+        0 = name + (tonic ! (value tonic_control));
+        2 = name + (supertonic ! (value supertonic_control));
+        4 = name + (mediant ! (value mediant_control)); 
+        5 = name + (subdominant ! (value subdominant_control));
+        7 = name + (dominant ! (value dominant_control));
+        9 = name + (submediant ! (value submediant_control));
+        11= name + (leading ! (value leading_control));
+        _ = "";
+      end;
+    result = name + (tonic ! (ui::value tonic_control));
+  end;
+
 pick_interval t::event_position_t = 
-  case ((get_note t) - transposition) mod 12 of
-    0 = -12 : major7;   // C 
-    2 = -12 : minor7;   // D 
-    4 = -12 : minor7;   // E 
-    5 = -12 : major7;   // F
-    7 = -12 : dom7;     // G
-    9 = -12 : minor7;   // A
-    11= -12 : minor7b5; // B
-    _ = [];
+  result with
+  nor = ((get_note t) - transposition) mod 12;
+  name = scale ! nor;
+  intervals = 
+  case nor of
+    0 = debug (chord_name t) $$ tonic_chord;
+    2 = debug (chord_name t) $$ supertonic_chord;
+    4 = debug (chord_name t) $$ mediant_chord;  
+    5 = debug (chord_name t) $$ subdominant_chord;
+    7 = debug (chord_name t) $$ dominant_chord;  
+    9 = debug (chord_name t) $$ submediant_chord;
+    11= debug (chord_name t) $$ leading_chord;  
+    _ = debug ("No chord configured for " + name + " in current scale") $$ [];
+  end;
+  result = (-12 : intervals);
   end;
 
 chord_on_off intervals::list t::event_position_t = map (transpose_note t) intervals; 

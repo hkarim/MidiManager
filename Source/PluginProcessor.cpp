@@ -16,7 +16,7 @@
 
 //==============================================================================
 MidiManagerAudioProcessor::MidiManagerAudioProcessor(): EventListener() {
-    
+    printf("MidiManagerAudioProcessor: %p\n", this);
     bus = new MessageBus();
     pureLink = nullptr;
     juceCocoa = new JuceCocoa(bus);

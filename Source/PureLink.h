@@ -22,6 +22,7 @@
 
 struct WidgetAction {
     UIWidget* widget;
+    pure_expr* pureWidget;
     pure_expr* action;
 };
 
@@ -37,14 +38,14 @@ private:
     std::string filename;
     std::string code;
     std::string errors;
-    bool debug = true;
+    bool debug = false;
     bool logging = false;
     bool silenceOnErrors = false;
     
     std::map<int, WidgetAction*> widgetMap;
     std::vector<UIWidget*> widgetVector;
     
-        
+            
     
 public:
     PureLink(const std::string& filename, MessageBus* bus);
@@ -61,7 +62,9 @@ public:
     bool isSilenceOnErrors() { return silenceOnErrors; }
     void setSilenceOnErrors(bool s) { silenceOnErrors = s; }
     const pure_interp* currentInterpreter() { return pure_current_interp(); }
+    
     void log(const std::string& ingoing, const std::string& outgoing);
+    int linkGetWidgetIntValue(pure_expr* possibleWidget);
 private:
     void init();
     pure_expr* createNoteOnMessage(int channel, int note, int velocity, int position);
@@ -69,9 +72,11 @@ private:
     bool createMessageFrom(pure_expr* expr, MidiMessage& message, int& position);
     
     void initUI();
+    bool isWidget(const pure_expr* possibleWidget);
     pure_expr* widgetExprProperty(const pure_expr* widget, const std::string& name);
     int widgetIntProperty(const pure_expr* widget, const std::string& name);
     std::string widgetStringProperty(const pure_expr* widget, const std::string& name);
+    std::vector<std::string> widgetStringListProperty(const pure_expr* widget, const std::string& name);
     void onEditorWidgetChange(const Event& event);
     
     void report(pure_expr* exception);

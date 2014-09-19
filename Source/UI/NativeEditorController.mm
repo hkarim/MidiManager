@@ -27,61 +27,135 @@ __weak MessageBus* bus;
 @synthesize silenceOnErrors;
 
 -(void) dealloc {
-    NSLog(@"dealloc %@", self);
+    //NSLog(@"dealloc %@", self);
     
     if (listener)
         delete listener;
-    
-    [self removeCustomControls];
+
     
     [super dealloc];
 }
 
--(void) removeCustomControls {
-    NSLog(@"removeCustomControls %@", self);
-    
-    /*
-    for (auto& v : controls) {
-        id<CustomControl> control = v.second;
-        NSView* view = [control view];
-        [view removeFromSuperview];
-        [control release];
+-(id<CustomControl>) createWidget:(UIWidget*) widget {
+    switch (widget->widgetType) {
+            
+        case UIWidgetType::Slider:
+            return [self createSlider:widget];
+            break;
+            
+        case UIWidgetType::Segmented:
+            return [self createSegmented:widget];
+            break;
+            
+        case UIWidgetType::PopUp:
+            return [self createPopUp:widget];
+            break;
+        case UIWidgetType::CheckBox:
+            return [self createCheckBox:widget];
+            break;
+            
+        default:
+            return nil;
+            break;
     }
-    
-    controls.clear();
-    */
 }
 
 -(SliderView*) createSlider: (UIWidget*) widget {
     
-    UIWidgetSlider* slider = static_cast<UIWidgetSlider*>(widget);
-    NSString* name = [NSString stringWithFormat:@"%s", slider->name.c_str()];
-    NSLog(@"createSlider: %@ code:%d value:%d min:%d max:%d", name, slider->code, slider->value, slider->minimum, slider->maximum);
-    SliderView* customControl =
-    [self createSliderNamed:name code: slider->code value:slider->value minimum:slider->minimum maximum:slider->maximum];
-    //int code = slider->code;
-    //controls.insert(std::map<int, id<CustomControl>>::value_type(code, customControl));
-    NSLog(@"created %@ by %@", customControl, self);
-    return customControl;
-}
-
--(SliderView*) createSliderNamed:(NSString*) name code:(int) code value:(int) value minimum:(int) min maximum:(int) max {
+    UIWidgetSlider* control = static_cast<UIWidgetSlider*>(widget);
+    NSString* name = [NSString stringWithFormat:@"%s", control->name.c_str()];
+    
     NSRect frame = [[[self scrollView] documentView] frame];
     
     SliderView* view = [[SliderView alloc] init];
-    view.controlCode = code;
+    view.controlCode = control->code;
     view.name = name;
     view.width = frame.size.width;
-    view.sliderCurrent = value;
-    view.sliderMin = min;
-    view.sliderMax = max;
-    view.sliderActionTarget = self;
-    view.sliderAction = @selector(customControlAction:);
+    view.controlCurrentValue = control->value;
+    view.sliderMin = control->minimum;
+    view.sliderMax = control->maximum;
+    view.controlActionTarget = self;
+    view.controlAction = @selector(customControlAction:);
     [view createControls];
     
-    return view;
     
+    return view;
 }
+
+-(SegmentedView*) createSegmented: (UIWidget*) widget {
+    
+    UIWidgetSegmented* control = static_cast<UIWidgetSegmented*>(widget);
+    NSString* name = [NSString stringWithFormat:@"%s", control->name.c_str()];
+    
+    NSRect frame = [[[self scrollView] documentView] frame];
+    
+    NSMutableArray* labels = [NSMutableArray new];
+    
+    for (auto& v : control->labels) {
+        [labels addObject:[NSString stringWithFormat:@"%s", v.c_str()]];
+    }
+    
+    SegmentedView* view = [[SegmentedView alloc] init];
+    view.controlCode = control->code;
+    view.name = name;
+    view.width = frame.size.width;
+    view.buttonLabels = labels;
+    view.controlCurrentValue = control->value;
+    view.controlActionTarget = self;
+    view.controlAction = @selector(customControlAction:);
+    [view createControls];
+    
+    
+    return view;
+}
+
+-(PopUpView*) createPopUp: (UIWidget*) widget {
+    
+    UIWidgetPopUp* control = static_cast<UIWidgetPopUp*>(widget);
+    NSString* name = [NSString stringWithFormat:@"%s", control->name.c_str()];
+    
+    NSRect frame = [[[self scrollView] documentView] frame];
+    
+    NSMutableArray* labels = [NSMutableArray new];
+    
+    for (auto& v : control->labels) {
+        [labels addObject:[NSString stringWithFormat:@"%s", v.c_str()]];
+    }
+    
+    PopUpView* view = [[PopUpView alloc] init];
+    view.controlCode = control->code;
+    view.name = name;
+    view.width = frame.size.width;
+    view.menuLabels = labels;
+    view.controlCurrentValue = control->value;
+    view.controlActionTarget = self;
+    view.controlAction = @selector(customControlAction:);
+    [view createControls];
+    
+    
+    return view;
+}
+
+-(CheckBoxView*) createCheckBox: (UIWidget*) widget {
+    
+    UIWidgetCheckBox* control = static_cast<UIWidgetCheckBox*>(widget);
+    NSString* name = [NSString stringWithFormat:@"%s", control->name.c_str()];
+    
+    NSRect frame = [[[self scrollView] documentView] frame];
+    
+    CheckBoxView* view = [[CheckBoxView alloc] init];
+    view.controlCode = control->code;
+    view.name = name;
+    view.width = frame.size.width;
+    view.controlCurrentValue = control->value;
+    view.controlActionTarget = self;
+    view.controlAction = @selector(customControlAction:);
+    [view createControls];
+    
+    
+    return view;
+}
+
 
 
 -(void) setMessageBus: (MessageBus*) encapsulatedMessageBus {
@@ -171,7 +245,8 @@ __weak MessageBus* bus;
 }
 
 -(void) onCreateUI: (const Event&) event {
-    NSLog(@"onCreateUI %@", self);
+    std::lock_guard<std::mutex> lock(mutex);
+    //NSLog(@"onCreateUI %@", self);
     //[self removeCustomControls];
     
     
@@ -181,30 +256,36 @@ __weak MessageBus* bus;
     CGFloat w = frame.size.width;
     CGFloat h = frame.size.height;
     
+    NSView* prevEditor = (EditorView*) [[self scrollView] documentView];
+    if (prevEditor) {
+        [[self scrollView] setDocumentView:nil];
+        NSArray* views = [prevEditor subviews];
+        for (id v in views) {
+            //NSLog(@"EditorView subview %@", v);
+            [v release];
+        }
+    }
+    
     EditorView* editor =
       [[EditorView alloc] initWithFrame:NSMakeRect(x, y, w, h)];
     
-    NSLog(@"Setting new DocumentView %@", self);
+    //NSLog(@"Setting new DocumentView %@", self);
     [[self scrollView] setDocumentView:editor];
     
     NSMutableArray* controls = [NSMutableArray new];
-    
+    //NSLog(@"Widgets Size: %lu", event.UI.widgets.size());
     for (auto& widget : event.UI.widgets) {
-        switch (widget->widgetType) {
-            case UIWidgetType::Slider:
-                [controls addObject:[self createSlider: widget]];
-                break;
-                
-            default:
-                break;
-        }
+        [controls addObject:[self createWidget: widget]];
     }
 
-    int yinc = 0;
+    CGFloat yinc = 0;
     for (id control in controls) {
-        [control setFrameOrigin:NSMakePoint(x, y + yinc)];
+        NSView* controlView = [control view];
+        
+        [control setFrameOrigin:NSMakePoint(x, yinc)];
         [editor addSubview:control];
-        yinc += 20;
+        
+        yinc += controlView.frame.size.height + 7;
     }
     [controls release];
     
@@ -237,10 +318,12 @@ __weak MessageBus* bus;
 }
 
 - (IBAction) customControlAction : (id) sender {
-    NSLog(@"customControlAction %@ sent object %@", self, sender);
+    std::lock_guard<std::mutex> lock(mutex);
+    
+    //NSLog(@"customControlAction %@ sent object %@", self, sender);
     id control = (id<CustomControl>) sender;
-    int code = [control controlCode];  // DO NOT DELETE THIS USELESS LINE
 
+    /*
     Event e = [self initEvent];
     e.uiEvent = UIEvent::Logging;
     std::ostringstream input, output;
@@ -251,11 +334,11 @@ __weak MessageBus* bus;
     e.Logging.input = input.str();
     e.Logging.output = output.str();
     bus->publishAsync(e);
-    
+    */
     
     int intValue = [control currentIntValue];
     std::string stringValue { [[control currentStringValue] UTF8String] };
-
+    Event e = [self initEvent];
     e = [self initEvent];
     e.uiEvent = UIEvent::EditorWidgetChanged;
     e.Change.code = [control controlCode];
