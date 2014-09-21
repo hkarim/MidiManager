@@ -1,12 +1,11 @@
 #! --nosymbolic
-
 using "lib:Jeelona MidiManager";
 
 private extern void pure_link_debug(expr*, char*);
-private extern void  pure_link_widget_int_value(expr*, expr*);
+private extern void pure_link_signal_int(expr*, int, int);
+private extern void pure_link_signal_str(expr*, int, char*);
 
+signal widget_code::int new_value::int    = pure_link_signal_int pure_link widget_code new_value;
+signal widget_code::int new_value::string = pure_link_signal_str pure_link widget_code new_value;
 debug message::string = pure_link_debug pure_link message;
-native_widget_int_value widget = pure_link_widget_int_value pure_link widget;
-
-
 

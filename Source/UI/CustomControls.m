@@ -8,18 +8,19 @@
 
 #import <Cocoa/Cocoa.h>
 #import "CustomControls.h"
+#import "NS(Attributed)String+Geometrics.h"
 
 @implementation EditorView
 
 /*
 - (void)drawRect:(NSRect)dirtyRect {
     // set any NSColor for filling, say white:
-    [[NSColor blueColor] setFill];
+    [[NSColor yellowColor] setFill];
     NSRectFill(dirtyRect);
     [super drawRect:dirtyRect];
 }
- 
 */
+
 
 -(BOOL) isFlipped {
     return YES;
@@ -303,6 +304,8 @@
 @end
 
 
+
+
 @implementation CheckBoxView
 
 -(int) currentIntValue {
@@ -379,6 +382,107 @@
 
 -(IBAction) onControlChanged:(NSPopUpButton*)sender {
     _controlCurrentValue = [_buttonControl state];
+    if ([_controlActionTarget respondsToSelector:_controlAction]) {
+        [_controlActionTarget performSelector:_controlAction withObject:self];
+    }
+}
+
+@end
+
+
+@implementation LabelView
+
+-(int) currentIntValue {
+    return 0;
+}
+
+-(void) setCurrentIntValue:(int)currentIntValue {
+    
+}
+
+-(NSString*) currentStringValue {
+    return [_contentControl stringValue];
+}
+
+-(void) setCurrentStringValue:(NSString *)currentStringValue {
+    _contentControl.stringValue = currentStringValue;
+}
+
+
+- (void)drawRect:(NSRect)dirtyRect {
+    [[NSColor lightGrayColor] setFill];
+    NSRectFill(dirtyRect);
+    [super drawRect:dirtyRect];
+}
+ 
+
+-(void) createControls {
+    
+    NSControlSize defaultControlSize = NSRegularControlSize;
+    CGFloat defaultSize = [NSFont systemFontSizeForControlSize:defaultControlSize];
+    NSFont* font = [NSFont systemFontOfSize:defaultSize];
+    NSFont* boldFont = [NSFont boldSystemFontOfSize:defaultSize];
+
+    CGFloat length = _controlCurrentValue.length;
+    CGFloat height = defaultSize * 1.61803398875f * (length / 100.0f) * 3.0f;
+    if (height < 21.0f) height = defaultSize * 1.61803398875f * 3.0f;
+    
+    //NSLog(@"H: %f", height);
+    [self setFrameSize:NSMakeSize(_width, height)];
+    
+    _label = [[NSTextField alloc] init];
+    _label.translatesAutoresizingMaskIntoConstraints = NO;
+    [_label setStringValue:_name];
+    [_label setBezeled:NO];
+    [_label setDrawsBackground:NO];
+    [_label setEditable:NO];
+    [_label setSelectable:YES];
+    [_label setFont:boldFont];
+    [[_label cell] setAlignment:NSLeftTextAlignment];
+    [self addSubview:_label];
+    
+    
+    _contentControl = [[NSTextField alloc] init];
+    _contentControl.translatesAutoresizingMaskIntoConstraints = NO;
+    [_contentControl setStringValue:_controlCurrentValue];
+    //[[_contentControl cell] setLineBreakMode:NSLineBreakByWordWrapping];
+    //[[_contentControl cell] setUsesSingleLineMode:NO];
+    [_contentControl setBezeled:NO];
+    [_contentControl setEditable:NO];
+    [_contentControl setSelectable:YES];
+    [_contentControl setDrawsBackground:NO];
+    //[_contentControl setDrawsBackground:YES];
+    //[_contentControl setBackgroundColor:[NSColor blueColor]];
+    [_contentControl setFont:font];
+    [[_contentControl cell] setAlignment:NSLeftTextAlignment];
+    [self addSubview:_contentControl];
+    
+    // Layout
+
+    NSDictionary *metrics = @{ @"wp": @100.0, @"vp": [NSNumber numberWithDouble:height] };
+    NSDictionary *views = NSDictionaryOfVariableBindings(_label,_contentControl);
+    
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"|-[_label(wp)]-[_contentControl]-|"
+                                                                 options:NSLayoutFormatAlignAllTop
+                                                                 metrics:metrics
+                                                                   views:views]];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-[_contentControl(<=vp)]-|"
+                                                                 options:nil
+                                                                 metrics:metrics
+                                                                   views:views]];
+    [self addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|-[_label(_contentControl)]-|"
+                                                                 options:nil
+                                                                 metrics:metrics
+                                                                   views:views]];
+    
+}
+
+-(NSView*) view {
+    return self;
+}
+
+-(IBAction) onControlChanged:(NSPopUpButton*)sender {
+    _controlCurrentValue = [_contentControl stringValue];
     if ([_controlActionTarget respondsToSelector:_controlAction]) {
         [_controlActionTarget performSelector:_controlAction withObject:self];
     }

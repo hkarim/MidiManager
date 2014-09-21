@@ -16,7 +16,7 @@
 
 struct MainInterpreter {
     
-    pure_interp* createInterpreter() {
+    pure_interp* createInterpreter(bool debug) {
         const char* currentEx =
           File::getSpecialLocation(File::SpecialLocationType::currentExecutableFile).getFullPathName().toRawUTF8();
         std::string location =
@@ -26,7 +26,16 @@ struct MainInterpreter {
         std::string libDir =
           std::string(location).append("/Contents/MacOS/");
         
-        
+        std::vector<const char*> args;
+        args.push_back(currentEx);
+        args.push_back("--eager-jit");
+        args.push_back("-I");
+        args.push_back(includeDir.c_str());
+        args.push_back("-L");
+        args.push_back(libDir.c_str());
+        if (debug) args.push_back("-g");
+        args.push_back(nullptr);
+        /*
         char* argv[] = {
             strdup(currentEx),
             strdup("--eager-jit"),
@@ -36,9 +45,11 @@ struct MainInterpreter {
             strdup(libDir.c_str()),
             nullptr
         };
+        */
         //printf("creating new interpreter instance\n");
         pure_interp* local = pure_lock_interp(defaultInstance);
-        pure_interp* newInstance = pure_create_interp(6, argv);
+        char** argv = (char**) &args[0];
+        pure_interp* newInstance = pure_create_interp(args.size(), argv);
         pure_unlock_interp(local);
         return newInstance;
     }
@@ -46,8 +57,6 @@ struct MainInterpreter {
     pure_interp* defaultInstance = pure_create_interp(0, 0);
     
 } interpreter;
-
-
 
 
 
@@ -72,30 +81,45 @@ void pure_link_debug(pure_expr* pureLinkPointer, const char* message) {
 }
 
 extern "C"
-int pure_link_widget_int_value(pure_expr* pureLinkPointer, pure_expr* widget) {
-    printf("pure_link_widget_int_value\n");
+void pure_link_signal_int(pure_expr* pureLinkPointer, int widgetCode, int newValue) {
+    //printf("pure_link_signal\n");
     void* p;
     if (pure_is_pointer(pureLinkPointer, &p)) {
-        printf("passed\n");
+        //printf("pure_link_signal pure_is_pointer passed\n");
         PureLink* pureLink = (PureLink*) p;
         if (pureLink)
-            return pureLink->linkGetWidgetIntValue(widget);
+            pureLink->signal(widgetCode, newValue);
     }
-    return 0;
+}
+
+extern "C"
+void pure_link_signal_str(pure_expr* pureLinkPointer, int widgetCode, const char* newValue) {
+    //printf("pure_link_signal\n");
+    void* p;
+    if (pure_is_pointer(pureLinkPointer, &p)) {
+        //printf("pure_link_signal pure_is_pointer passed\n");
+        PureLink* pureLink = (PureLink*) p;
+        if (pureLink)
+            pureLink->signal(widgetCode, newValue);
+    }
 }
 
 
 
 const std::string processMidiBufferF = "process_midi_buffer";
-const std::string createUIF = "create_ui";
-const std::string pureLinkVar = "pure_link";
+const std::string isMidiBufferTF     = "is_midi_buffer";
+const std::string createUIF          = "create_ui";
+const std::string pureLinkVar        = "pure_link";
 
-const std::string typeTagProperty = "ui::type_tag" ;
-const std::string nameProperty = "ui::name" ;
-const std::string actionProperty = "ui::action";
-const std::string valueProperty = "ui::value";
-const std::string allWidgetsF   = "ui::all_widgets";
-const std::string isWidgetF     = "ui::is_widget";
+const std::string typeTagProperty    = "ui::type_tag" ;
+const std::string codeProperty       = "ui::code" ;
+const std::string nameProperty       = "ui::name" ;
+const std::string actionProperty     = "ui::action";
+const std::string valueProperty      = "ui::value";
+const std::string allWidgetsF        = "ui::all_widgets";
+const std::string isWidgetF          = "ui::is_widget";
+const std::string addWidgetF         = "ui::add_widget";
+const std::string rmWidgetF          = "ui::rm_widget";
 
 
 
@@ -167,7 +191,7 @@ void PureLink::init() {
     }
 
     pure_interp* local;
-    interp = interpreter.createInterpreter();
+    interp = interpreter.createInterpreter(debug);
     local = pure_lock_interp(interp);
     if (debug) printf("Pure Interpreter: %p\n", (void*) interp);
     pure_expr* evaluated = pure_eval(code.c_str());
@@ -215,7 +239,7 @@ void PureLink::initUI() {
     
     pure_expr* widgets = pure_appxv(createUI, 0, nullptr, &exceptions);
     if (exceptions) {
-        report(exceptions);
+        report("initUI", exceptions);
         return;
     }
     
@@ -226,11 +250,11 @@ void PureLink::initUI() {
         pure_expr* args[] = {widgets};
         pure_expr* validationResult = pure_appxv(allWidgets, 1, args, &exceptions);
         if (exceptions) {
-            report(exceptions);
+            report("initUI", exceptions);
             return;
         }
-        int validation;
-        if (pure_is_int(validationResult, &validation) == 0 || validation == 0) {
+        int validation = -1;
+        if (!pure_is_int(validationResult, &validation) || validation == 0) {
             std::string errm = "Could not validate widgets returned by " + createUIF + " call";
             report(errm);
             return;
@@ -253,57 +277,69 @@ void PureLink::initUI() {
     pure_expr** elems;
     pure_is_listv(widgets, &size, &elems);  // we're sure it is a list, we just validated that
     if (size == 0 ) return;  // nothing to do here
+
     
     for (int i = 0; i < size; i++) {
         pure_expr* widget = elems[i];
-        int code = 100 + i;
+        
         int type_tag = widgetIntProperty(widget, typeTagProperty);
         pure_expr* action = widgetExprProperty(widget, actionProperty);
         switch (uiWidgetType(type_tag)) {
             case UIWidgetType::Slider: {
                 UIWidgetSlider* control = new UIWidgetSlider {};
-                control->code = code;
+                control->code = widgetIntProperty(widget, codeProperty);
                 control->name = widgetStringProperty(widget, nameProperty);
                 control->value = widgetIntProperty(widget, valueProperty);
                 control->minimum = widgetIntProperty(widget, "ui::min");
                 control->maximum = widgetIntProperty(widget, "ui::max");
-                WidgetAction* widgetAction = new WidgetAction { control, widget, action };
-                widgetMap.insert(std::map<int, WidgetAction*>::value_type(code, widgetAction));
+                WidgetAction* widgetAction = new WidgetAction { control, action };
+                widgetMap.insert(std::map<int, WidgetAction*>::value_type(control->code, widgetAction));
                 widgetVector.push_back(control);
             }
                 break;
                 
             case UIWidgetType::Segmented: {
                 UIWidgetSegmented* control = new UIWidgetSegmented {};
-                control->code = code;
+                control->code = widgetIntProperty(widget, codeProperty);
                 control->name = widgetStringProperty(widget, nameProperty);
                 control->value = widgetIntProperty(widget, valueProperty);
                 control->labels = widgetStringListProperty(widget, "ui::labels");
-                WidgetAction* widgetAction = new WidgetAction { control, widget, action };
-                widgetMap.insert(std::map<int, WidgetAction*>::value_type(code, widgetAction));
+                WidgetAction* widgetAction = new WidgetAction { control, action };
+                widgetMap.insert(std::map<int, WidgetAction*>::value_type(control->code, widgetAction));
                 widgetVector.push_back(control);
             }
                 break;
                 
             case UIWidgetType::PopUp: {
                 UIWidgetPopUp* control = new UIWidgetPopUp {};
-                control->code = code;
+                control->code = widgetIntProperty(widget, codeProperty);
                 control->name = widgetStringProperty(widget, nameProperty);
                 control->value = widgetIntProperty(widget, valueProperty);
                 control->labels = widgetStringListProperty(widget, "ui::labels");
-                WidgetAction* widgetAction = new WidgetAction { control, widget, action };
-                widgetMap.insert(std::map<int, WidgetAction*>::value_type(code, widgetAction));
+                WidgetAction* widgetAction = new WidgetAction { control, action };
+                widgetMap.insert(std::map<int, WidgetAction*>::value_type(control->code, widgetAction));
                 widgetVector.push_back(control);
             }
                 break;
                 
             case UIWidgetType::CheckBox: {
                 UIWidgetCheckBox* control = new UIWidgetCheckBox {};
-                control->code = code;
+                control->code = widgetIntProperty(widget, codeProperty);
                 control->name = widgetStringProperty(widget, nameProperty);
                 control->value = widgetIntProperty(widget, valueProperty);
-                WidgetAction* widgetAction = new WidgetAction { control, widget, action };
-                widgetMap.insert(std::map<int, WidgetAction*>::value_type(code, widgetAction));
+                WidgetAction* widgetAction = new WidgetAction { control, action };
+                widgetMap.insert(std::map<int, WidgetAction*>::value_type(control->code, widgetAction));
+                widgetVector.push_back(control);
+            }
+                break;
+            
+            case UIWidgetType::Label: {
+                UIWidgetLabel* control = new UIWidgetLabel {};
+                control->code = widgetIntProperty(widget, codeProperty);
+                control->name = widgetStringProperty(widget, nameProperty);
+                control->value = widgetStringProperty(widget, valueProperty);
+                WidgetAction* widgetAction = new WidgetAction { control, action };
+                widgetMap.insert(std::map<int, WidgetAction*>::value_type(control->code, widgetAction));
                 widgetVector.push_back(control);
             }
                 break;
@@ -318,25 +354,27 @@ void PureLink::initUI() {
 }
         
         
-int PureLink::linkGetWidgetIntValue(pure_expr* possibleWidget) {
-    std::lock_guard<std::mutex> lock(mutex);
-    pure_interp* local;
-    local = pure_lock_interp(interp);
-    
-    int result = 0;
-    if (isWidget(possibleWidget)) {
-        for (auto& e : widgetMap) {
-            auto w = e.second->pureWidget;
-            if (w == possibleWidget) {
-                result = e.second->widget->currentIntValue();
-                break;
-            }
-        }
-    }
-    
-    pure_unlock_interp(local);
-    return result;
+void PureLink::signal(int widgetCode, int newValue) {
+    WidgetAction* wa = widgetMap[widgetCode];
+    if (debug) printf("Widget name: %s\n", wa->widget->name.c_str());
+    Event e;
+    e.uiEvent = UIEvent::UISignal;
+    e.Change.code = widgetCode;
+    e.Change.intValue = newValue;
+    bus->publishAsync(e);
 }
+        
+        
+void PureLink::signal(int widgetCode, const std::string& newValue) {
+    WidgetAction* wa = widgetMap[widgetCode];
+    if (debug) printf("Widget name: %s\n", wa->widget->name.c_str());
+    Event e;
+    e.uiEvent = UIEvent::UISignal;
+    e.Change.code = widgetCode;
+    e.Change.stringValue = newValue;
+    bus->publishAsync(e);
+}
+
         
         
 bool PureLink::isWidget(const pure_expr* possibleWidget) {
@@ -350,7 +388,7 @@ bool PureLink::isWidget(const pure_expr* possibleWidget) {
         pure_expr* exceptions = nullptr;
         pure_expr* validationResult = pure_appxv(isWidget, 1, args, &exceptions);
         if (exceptions) {
-            report(exceptions);
+            report("isWidget", exceptions);
             result = false;
         } else {
             int validation;
@@ -383,7 +421,15 @@ pure_expr* PureLink::widgetExprProperty(const pure_expr* widget, const std::stri
     if (propertySymbol) {
         propertyFunction = pure_symbol(propertySymbol);
         pure_expr* args[] = { (pure_expr*) widget};
-        value = pure_appv(propertyFunction, 1, args);
+        pure_expr* exception = nullptr;
+        value = pure_appxv(propertyFunction, 1, args, &exception);
+        if (exception) {
+            std::ostringstream input , output;
+            input << "Error" << std::endl;
+            output << "Could not read property: " << name << " on widget: " << str(widget) << std::endl;
+            output << "Pure Exception: " << str(exception) << std::endl << std::endl;
+            log(input.str(), output.str());
+        }
         
     }
     return value;
@@ -397,7 +443,20 @@ int PureLink::widgetIntProperty(const pure_expr* widget, const std::string& name
     if (propertySymbol) {
         propertyFunction = pure_symbol(propertySymbol);
         pure_expr* args[] = { (pure_expr*) widget};
-        pure_expr* result = pure_appv(propertyFunction, 1, args);
+        pure_expr* exception = nullptr;
+        pure_expr* result = pure_appxv(propertyFunction, 1, args, &exception);
+        if (exception) {
+            std::ostringstream input , output;
+            input << "Error" << std::endl;
+            output << "Could not read property: " << name << " on widget: " << str(widget) << std::endl;
+            output << "Pure Exception: " << str(exception) << std::endl;
+            if (debug) {
+                output << pure_evalcmd("bt") << std::endl;
+            }
+            output << std::endl;
+            log(input.str(), output.str());
+            return value;
+        }
         if (!pure_is_int(result, &value)) {
             std::ostringstream input , output;
             input << "Warning" << std::endl;
@@ -415,7 +474,20 @@ std::string PureLink::widgetStringProperty(const pure_expr* widget, const std::s
     if (propertySymbol) {
         propertyFunction = pure_symbol(propertySymbol);
         pure_expr* args[] = { (pure_expr*) widget};
-        pure_expr* result = pure_appv(propertyFunction, 1, args);
+        pure_expr* exception = nullptr;
+        pure_expr* result = pure_appxv(propertyFunction, 1, args, &exception);
+        if (exception) {
+            std::ostringstream input , output;
+            input << "Error" << std::endl;
+            output << "Could not read property: " << name << " on widget: " << str(widget) << std::endl;
+            output << "Pure Exception: " << str(exception) << std::endl;
+            if (debug) {
+                output << pure_evalcmd("bt") << std::endl;
+            }
+            output << std::endl;
+            log(input.str(), output.str());
+            return value;
+        }
         char* buf;
         if (!pure_is_string_dup(result, &buf)) {
             std::ostringstream input , output;
@@ -437,9 +509,22 @@ std::vector<std::string> PureLink::widgetStringListProperty(const pure_expr* wid
     if (propertySymbol) {
         propertyFunction = pure_symbol(propertySymbol);
         pure_expr* args[] = { (pure_expr*) widget};
-        pure_expr* result = pure_appv(propertyFunction, 1, args);
+        pure_expr* exception = nullptr;
+        pure_expr* result = pure_appxv(propertyFunction, 1, args, &exception);
         pure_expr** elems;
         size_t size;
+        if (exception) {
+            std::ostringstream input , output;
+            input << "Error" << std::endl;
+            output << "Could not read property: " << name << " on widget: " << str(widget) << std::endl;
+            output << "Pure Exception: " << str(exception) << std::endl;
+            if (debug) {
+                output << pure_evalcmd("bt") << std::endl;
+            }
+            output << std::endl;
+            log(input.str(), output.str());
+            return value;
+        }
         if (!pure_is_listv(result, &size, &elems)) {
             std::ostringstream input , output;
             input << "Warning" << std::endl;
@@ -497,6 +582,11 @@ void PureLink::onEditorWidgetChange(const Event& event) {
         control->value = event.Change.intValue;
     };
     
+    auto updateLabel = [&] {
+        UIWidgetLabel* control = static_cast<UIWidgetLabel*>(wa->widget);
+        control->value = event.Change.stringValue;
+    };
+    
     pure_expr* action = wa->action;
     UIWidgetType wt = wa->widget->widgetType;
     pure_expr* arg;
@@ -517,6 +607,10 @@ void PureLink::onEditorWidgetChange(const Event& event) {
             arg = pure_int(event.Change.intValue);
             updateCheckBox();
             break;
+        case UIWidgetType::Label:
+            arg = pure_cstring_dup(event.Change.stringValue.c_str());
+            updateLabel();
+            break;
         default:
             break;
             
@@ -527,7 +621,7 @@ void PureLink::onEditorWidgetChange(const Event& event) {
     pure_appxv(action, 1, args, &exception);
     
     if (exception) {
-        report(exception);
+        report("onEditorWidgetChange", exception);
     }
     
     pure_unlock_interp(local);
@@ -568,12 +662,17 @@ void PureLink::log(const std::string& ingoing, const std::string& outgoing) {
     
 }
         
-void PureLink::report(pure_expr* exception) {
+void PureLink::report(const std::string& who, pure_expr* exception) {
     std::ostringstream m;
     
     m << "An exception ("
       << str(exception)
       << ") has been thrown while executing your script, please debug your code";
+    
+    if (debug) {
+        //m << std::endl << pure_evalcmd("bt") << std::endl;
+        printf("reported from: %s, exception: %s\n", who.c_str(), str(exception));
+    }
     
     errors = m.str();
     Event e;
@@ -724,7 +823,7 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
             pure_expr* exceptions = nullptr;
             pure_expr* result = pure_appxv(processMidiBuffer, 1, args, &exceptions);
             if (exceptions) {
-                report(exceptions);
+                report("processBlock", exceptions);
             } else {
                 
                 if (logging) {

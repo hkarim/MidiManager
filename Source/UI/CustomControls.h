@@ -91,6 +91,21 @@
 
 @end
 
+@interface LabelView : NSView <CustomControl>
+@property int controlCode;
+@property (readonly) NSTextField* label;
+@property (copy) NSTextField* contentControl;
+@property CGFloat width;
+@property (copy) NSString* name;
+@property (copy) NSString* controlCurrentValue;
+
+@property (assign) id controlActionTarget;
+@property SEL controlAction;
+
+@end
+
+
+
 
 
 

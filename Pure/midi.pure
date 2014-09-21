@@ -18,6 +18,9 @@ to_message_list_t xs::list                     = map to_message_t xs;
 to_event_position_t (Message event position)   = (event,position);
 to_midi_buffer_t mxs::message_list_t           = map (\m -> (event m, position m)) mxs;
 
+is_midi_buffer _::midi_buffer_t                = true;
+is_midi_buffer _                               = false;
+
 nonfix NoteOn;
 nonfix NoteOff;
 nonfix None;

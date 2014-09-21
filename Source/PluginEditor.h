@@ -23,8 +23,8 @@ class MidiManagerAudioProcessorEditor  : public AudioProcessorEditor, public Eve
 private:
     NSViewComponent nsviewComponent;
     MessageBus* bus;
-    int currentWidth = 700;
-    int currentHeight = 400;
+    int currentWidth = 941;
+    int currentHeight = 599;
     
 public:
     MidiManagerAudioProcessorEditor (MidiManagerAudioProcessor* ownerFilter);

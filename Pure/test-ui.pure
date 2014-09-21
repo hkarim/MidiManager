@@ -1,18 +1,45 @@
 using ui;
 using midi;
 using system;
+using native;
 
 let output_channel_ref = ref 0;
 output_channel = get output_channel_ref;
 
 
-channel    = ui::Slider "Output Channel" (output_channel+1) 1 16 (\v -> put output_channel_ref (v-1));
-scale_root = ui::Segmented "Scale Root" 0 ["C","D","E","F","G","A","B"] (\v -> v); 
-scale      = ui::Segmented "Scale" 0 ["Major", "Minor"] (\v -> v);
-popup      = ui::PopUp "Options" 0 ["Harmonize", "Chordize"] (\v -> v);
-checkbox   = ui::CheckBox "Did You Like It?" 1 (\v -> v);
+let desc      =
+  ui::Label 
+    "Description" 
+    (
+     "Sample User Interface Script\n" +
+     "This is a label where you can add help instructions, author info etc. " +
+     "The Slider (Sample Channel Slider) control below will route all input to the selected channel." 
+    )
+    (\x -> x);
 
-create_ui = [channel,scale_root,scale, popup, checkbox];
+let cb_val_ref = ref 0;
+on_cb_click v = 
+  case v of
+    0 = signal (ui::code indicator) "Yeah!! Nice Click";
+    1 = signal (ui::code indicator) "Ok, I think you get it";
+  end;
+
+on_combo_change v =
+  case v of
+    0 = signal (ui::code indicator) "Harmonize";
+    1 = signal (ui::code indicator) "Chordize";
+  end;
+    
+
+let author     = ui::Label "Author" "Your Name here, notice that consecutive labels are merged" (\x -> x);
+let notice     = ui::Label "Notice" "You can add a label anywhere!!" (\x -> x);
+let slider     = ui::Slider "Sample Channel Slider" (output_channel+1) 1 16 (\v -> put output_channel_ref (v-1));
+let segmented  = ui::Segmented "Segmented Buttons Control" 0 ["C","D","E","F","G","A","B"] (\v -> v); 
+let popup      = ui::PopUp "Sample ComboBox Control" 0 ["Harmonize", "Chordize"] (\v -> on_combo_change v);
+let checkbox   = ui::CheckBox "And a CheckBox" (get cb_val_ref) (\v -> on_cb_click v);
+let indicator  = ui::Label "Indicator" "Change the checkbox above to change me" (\x -> x);
+
+create_ui = [desc, author, segmented, slider, notice, popup, checkbox, indicator];
 
 process_midi_buffer buf::midi_buffer_t = map (\ep -> set_channel ep output_channel) buf;
 

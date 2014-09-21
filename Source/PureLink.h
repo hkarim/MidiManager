@@ -6,8 +6,8 @@
 //
 //
 
-#ifndef __MidiManager__PureTest__
-#define __MidiManager__PureTest__
+#ifndef __MidiManager__PureLink__
+#define __MidiManager__PureLink__
 
 #include "../JuceLibraryCode/JuceHeader.h"
 #include <stdio.h>
@@ -22,7 +22,6 @@
 
 struct WidgetAction {
     UIWidget* widget;
-    pure_expr* pureWidget;
     pure_expr* action;
 };
 
@@ -38,7 +37,7 @@ private:
     std::string filename;
     std::string code;
     std::string errors;
-    bool debug = false;
+    bool debug = true;
     bool logging = false;
     bool silenceOnErrors = false;
     
@@ -64,7 +63,8 @@ public:
     const pure_interp* currentInterpreter() { return pure_current_interp(); }
     
     void log(const std::string& ingoing, const std::string& outgoing);
-    int linkGetWidgetIntValue(pure_expr* possibleWidget);
+    void signal(int widgetCode, int newValue);
+    void signal(int widgetCode, const std::string& newValue);
 private:
     void init();
     pure_expr* createNoteOnMessage(int channel, int note, int velocity, int position);
@@ -79,11 +79,11 @@ private:
     std::vector<std::string> widgetStringListProperty(const pure_expr* widget, const std::string& name);
     void onEditorWidgetChange(const Event& event);
     
-    void report(pure_expr* exception);
+    void report(const std::string& who, pure_expr* exception);
     void report(std::string& message);
     
 };
 
 
 
-#endif /* defined(__MidiManager__PureTest__) */
+#endif /* defined(__MidiManager__PureLink__) */

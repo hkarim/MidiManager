@@ -24,12 +24,13 @@ enum class UIEvent : unsigned int {
     FileChosen,
     ScriptErrors,
     Logging,
-    EditorWidgetChanged
+    EditorWidgetChanged,
+    UISignal
     //CreateUI
 };
 
 enum class UIWidgetType : int {
-    Unkown = -1, Slider = 100, Segmented = 101, PopUp = 102, CheckBox = 103
+    Unkown = -1, Slider = 100, Segmented = 101, PopUp = 102, CheckBox = 103, Label = 104
 };
 
 inline UIWidgetType uiWidgetType(const int tag) {
@@ -46,6 +47,9 @@ inline UIWidgetType uiWidgetType(const int tag) {
         case 103:
             return UIWidgetType::CheckBox;
             break;
+        case 104:
+            return UIWidgetType::Label;
+            break;
             
         default:
             return UIWidgetType::Unkown;
@@ -59,6 +63,7 @@ struct UIWidget {
     std::string name;
     virtual ~UIWidget() {}
     virtual int currentIntValue() { return 0; }
+    virtual std::string currentStringValue() { return ""; }
 };
 
 struct UIWidgetSlider : UIWidget {
@@ -87,6 +92,12 @@ struct UIWidgetCheckBox : UIWidget {
     UIWidgetCheckBox() : UIWidget {} { widgetType = UIWidgetType::CheckBox; }
     int value;
     virtual int currentIntValue() { return value; }
+};
+    
+struct UIWidgetLabel : UIWidget {
+    UIWidgetLabel() : UIWidget {} { widgetType = UIWidgetType::Label; }
+    std::string value;
+    virtual std::string currentStringValue() { return value; }
 };
 
 struct Event {

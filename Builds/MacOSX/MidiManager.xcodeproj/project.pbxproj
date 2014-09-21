@@ -29,6 +29,7 @@
 		3DC078A719B6319300114325 /* NativeEditorController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3DC078A619B6319300114325 /* NativeEditorController.mm */; };
 		3DDC94ED19B745FA006D6059 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3DDC94EC19B745FA006D6059 /* Carbon.framework */; };
 		3DF0A9A519BBAE3400FA6508 /* midi.pure in Resources */ = {isa = PBXBuildFile; fileRef = 3DF0A9A219BBAE3400FA6508 /* midi.pure */; };
+		3DFB385D19CD9DB00074252B /* NS(Attributed)String+Geometrics.m in Sources */ = {isa = PBXBuildFile; fileRef = 3DFB385C19CD9DB00074252B /* NS(Attributed)String+Geometrics.m */; };
 		3FED5AFE2208B868C2AD5941 /* juce_RTAS_Wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A8945D90525C8A8E9FC38C45 /* juce_RTAS_Wrapper.cpp */; settings = {COMPILER_FLAGS = "-w"; }; };
 		40805A42B0EFD1201CE92173 /* juce_core.mm in Sources */ = {isa = PBXBuildFile; fileRef = 86487CF872BA75F9247123F0 /* juce_core.mm */; };
 		41D8E89F869B2E7520DD628A /* juce_VST_Wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6E0D8608356FD53EBF69E7FA /* juce_VST_Wrapper.cpp */; };
@@ -292,6 +293,8 @@
 		3DDC94EC19B745FA006D6059 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		3DDC94F019B76C8D006D6059 /* MessageBus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MessageBus.h; path = ../../Source/Messaging/MessageBus.h; sourceTree = "<group>"; };
 		3DF0A9A219BBAE3400FA6508 /* midi.pure */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = midi.pure; sourceTree = "<group>"; };
+		3DFB385B19CD9DB00074252B /* NS(Attributed)String+Geometrics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NS(Attributed)String+Geometrics.h"; sourceTree = "<group>"; };
+		3DFB385C19CD9DB00074252B /* NS(Attributed)String+Geometrics.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NS(Attributed)String+Geometrics.m"; sourceTree = "<group>"; };
 		3E39EED7CD051819436B2D15 /* juce_MACAddress.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_MACAddress.cpp; path = ../../JuceLibraryCode/modules/juce_core/network/juce_MACAddress.cpp; sourceTree = SOURCE_ROOT; };
 		3E75167A910ED82C1E581ED9 /* juce_android_Messaging.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = juce_android_Messaging.cpp; path = ../../JuceLibraryCode/modules/juce_events/native/juce_android_Messaging.cpp; sourceTree = SOURCE_ROOT; };
 		3EB7BE802AF9B8310C7D6033 /* juce_CaretComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = juce_CaretComponent.h; path = ../../JuceLibraryCode/modules/juce_gui_basics/keyboard/juce_CaretComponent.h; sourceTree = SOURCE_ROOT; };
@@ -1338,6 +1341,8 @@
 				3DC0789C19B6239A00114325 /* JuceCocoa.h */,
 				3DC0789D19B6266C00114325 /* JuceCocoa.mm */,
 				3DC078A019B62C0100114325 /* NativeEditorView.xib */,
+				3DFB385B19CD9DB00074252B /* NS(Attributed)String+Geometrics.h */,
+				3DFB385C19CD9DB00074252B /* NS(Attributed)String+Geometrics.m */,
 				3DC078A519B6319300114325 /* NativeEditorController.h */,
 				3DC078A619B6319300114325 /* NativeEditorController.mm */,
 				3D60FA6319C9471F0064F2E9 /* CustomControls.m */,
@@ -2962,6 +2967,7 @@
 				FE2B06670E5404D9693A2CDD /* juce_RTAS_DigiCode2.cpp in Sources */,
 				78A3C79E860917A73B2EBD29 /* juce_RTAS_DigiCode3.cpp in Sources */,
 				6AFB5C2FAB25E4F6D1C4F8F9 /* juce_RTAS_MacUtilities.mm in Sources */,
+				3DFB385D19CD9DB00074252B /* NS(Attributed)String+Geometrics.m in Sources */,
 				3FED5AFE2208B868C2AD5941 /* juce_RTAS_Wrapper.cpp in Sources */,
 				D6156D29516D6E344D165B6B /* juce_video.mm in Sources */,
 				41D8E89F869B2E7520DD628A /* juce_VST_Wrapper.cpp in Sources */,

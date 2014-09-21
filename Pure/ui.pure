@@ -1,67 +1,132 @@
 #! --nosymbolic
 
-using native;
-
 namespace ui;
 
+private ref_counter;
+private next_code;
+
+private slider;
+private UISlider;
+
+private segmented;
+private UISegmented;
+
+private pop_up;
+private UIPopUp;
+
+private check_box;
+private UICheckBox;
+
+
+private label;
+private UILabel;
+
+
+// ui widgets reference counter
+let ref_counter = ref 1000;
+next_code = put ref_counter ( (get ref_counter) + 1);
+
+// widget interface
 interface widget with
-  type_tag    c::widget;
-  name        c::widget;
-  action      c::widget;
-  value       c::widget;
+  is_widget   w::widget;
+  type_tag    w::widget;
+  code        w::widget;
+  name        w::widget;
+  action      w::widget;
+  value       w::widget;
 end;
 
-is_widget = typep widget;
 all_widgets = all is_widget;
 
 type widget_list_t xs::list = all_widgets xs;
 
-//widget_int_value w::widget = native_widget_int_value widget;
 
-
-type slider (Slider name::string value::int minimum::int maximum::int action) =
+// Slider
+type slider (UISlider code::int name::string value::int minimum::int maximum::int action) =
   minimum < maximum && value >= minimum && value <= maximum;
 
 const slider_type_tag = 100;
-type_tag s::slider = slider_type_tag;
+type_tag _::slider = slider_type_tag;
 
-name    (Slider n _ _ _ _) = n;
-value   (Slider _ v _ _ _) = v;
-min     (Slider _ _ m _ _) = m;
-max     (Slider _ _ _ m _) = m;
-action  (Slider _ _ _ _ a) = a;
+Slider name::string value::int minimum::int maximum::int action = 
+  UISlider next_code name value minimum maximum action;
 
-type segmented (Segmented name::string value::int labels::list action) = all (typep string) labels;
+code    (UISlider c _ _ _ _ _) = c;
+name    (UISlider _ n _ _ _ _) = n;
+value   (UISlider _ _ v _ _ _) = v;
+min     (UISlider _ _ _ m _ _) = m;
+max     (UISlider _ _ _ _ m _) = m;
+action  (UISlider _ _ _ _ _ a) = a;
+
+type segmented (UISegmented code::int name::string value::int labels::list action) = all (typep string) labels;
 
 const segmented_type_tag = 101;
-type_tag s::segmented = segmented_type_tag;
+type_tag _::segmented = segmented_type_tag;
 
-name    (Segmented n _ _ _) = n;
-value   (Segmented _ v _ _) = v;
-labels  (Segmented _ _ l _) = l;
-action  (Segmented _ _ _ a) = a;
+Segmented name::string value::int labels::list action =
+  UISegmented next_code name value labels action;
 
-type pop_up (PopUp name::string value::int labels::list action) =  all (typep string) labels;
+code    (UISegmented c _ _ _ _) = c;
+name    (UISegmented _ n _ _ _) = n;
+value   (UISegmented _ _ v _ _) = v;
+labels  (UISegmented _ _ _ l _) = l;
+action  (UISegmented _ _ _ _ a) = a;
+
+type pop_up (UIPopUp code::int name::string value::int labels::list action) =  all (typep string) labels;
 
 const pop_up_type_tag = 102;
-type_tag s::pop_up = pop_up_type_tag;
+type_tag _::pop_up = pop_up_type_tag;
 
-name    (PopUp n _ _ _) = n;
-value   (PopUp _ v _ _) = v;
-labels  (PopUp _ _ l _) = l;
-action  (PopUp _ _ _ a) = a;
+PopUp name::string value::int labels::list action =
+  UIPopUp next_code name value labels action;
+
+code    (UIPopUp c _ _ _ _) = c;
+name    (UIPopUp _ n _ _ _) = n;
+value   (UIPopUp _ _ v _ _) = v;
+labels  (UIPopUp _ _ _ l _) = l;
+action  (UIPopUp _ _ _ _ a) = a;
 
 
-type check_box (CheckBox name::string value::int action) = true;
+type check_box (UICheckBox code::int name::string value::int action) = true;
 
 const check_box_type_tag = 103;
-type_tag s::check_box = check_box_type_tag;
+type_tag _::check_box = check_box_type_tag;
 
-name    (CheckBox n _ _) = n;
-value   (CheckBox _ v _) = v;
-action  (CheckBox _ _ a) = a;
+CheckBox name::string value::int action =
+  UICheckBox next_code name value action;
+
+code    (UICheckBox c _ _ _) = c;
+name    (UICheckBox _ n _ _) = n;
+value   (UICheckBox _ _ v _) = v;
+action  (UICheckBox _ _ _ a) = a;
+
+type label (UILabel code::int name::string value::string action) = true;
+
+const label_type_tag = 104;
+type_tag _::label = label_type_tag;
+
+Label name::string value::string action = 
+  UILabel next_code name value action;
+
+code   (UILabel c _ _ _) = c;
+name   (UILabel _ n _ _) = n;
+value  (UILabel _ _ v _) = v;
+action (UILabel _ _ _ a) = a;
+
+is_widget _::slider = true;
+is_widget _::segmented = true;
+is_widget _::pop_up = true;
+is_widget _::check_box = true;
+is_widget _::label = true;
+is_widget _ = false;
 
 
+// native support 
+using dict;
+let pure_widgets_ref = ref (dict []);
+pure_widgets = get pure_widgets_ref;
 
+add_widget c::int w::widget = put pure_widgets_ref (insert pure_widgets (c => w));
+get_widget c::int           = pure_widgets ! c;
 
 

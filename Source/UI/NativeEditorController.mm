@@ -53,6 +53,9 @@ __weak MessageBus* bus;
         case UIWidgetType::CheckBox:
             return [self createCheckBox:widget];
             break;
+        case UIWidgetType::Label:
+            return [self createLabel:widget];
+            break;
             
         default:
             return nil;
@@ -156,6 +159,26 @@ __weak MessageBus* bus;
     return view;
 }
 
+-(LabelView*) createLabel: (UIWidget*) widget {
+    
+    UIWidgetLabel* control = static_cast<UIWidgetLabel*>(widget);
+    NSString* name = [NSString stringWithFormat:@"%s", control->name.c_str()];
+    
+    NSRect frame = [[[self scrollView] documentView] frame];
+    
+    LabelView* view = [[LabelView alloc] init];
+    view.controlCode = control->code;
+    view.name = name;
+    view.width = frame.size.width;
+    view.controlCurrentValue = [NSString stringWithFormat:@"%s", control->value.c_str()];
+    view.controlActionTarget = self;
+    view.controlAction = @selector(customControlAction:);
+    [view createControls];
+    
+    
+    return view;
+}
+
 
 
 -(void) setMessageBus: (MessageBus*) encapsulatedMessageBus {
@@ -213,6 +236,11 @@ __weak MessageBus* bus;
             [self onLogging: event];
             break;
             
+        case UIEvent::UISignal:
+            
+            [self onUISignal: event];
+            break;
+            
         default:
             break;
     }
@@ -266,11 +294,10 @@ __weak MessageBus* bus;
         }
     }
     
-    EditorView* editor =
-      [[EditorView alloc] initWithFrame:NSMakeRect(x, y, w, h)];
-    
+    EditorView* editor = [[EditorView alloc] initWithFrame:NSMakeRect(x, y, w, h)];
+
     //NSLog(@"Setting new DocumentView %@", self);
-    [[self scrollView] setDocumentView:editor];
+    
     
     NSMutableArray* controls = [NSMutableArray new];
     //NSLog(@"Widgets Size: %lu", event.UI.widgets.size());
@@ -278,18 +305,93 @@ __weak MessageBus* bus;
         [controls addObject:[self createWidget: widget]];
     }
 
-    CGFloat yinc = 0;
+    NSView* prev = nil;
+    NSDictionary* views = nil;
+    NSArray* breakableConstraints = nil;
+    editor.translatesAutoresizingMaskIntoConstraints = NO;
     for (id control in controls) {
         NSView* controlView = [control view];
-        
-        [control setFrameOrigin:NSMakePoint(x, yinc)];
+        CGFloat currentControlHeight = controlView.frame.size.height;
+        NSDictionary *metrics = @{ @"w": [NSNumber numberWithDouble:w], @"ch": [NSNumber numberWithDouble:currentControlHeight] };
+        controlView.translatesAutoresizingMaskIntoConstraints = NO;
         [editor addSubview:control];
         
-        yinc += controlView.frame.size.height + 7;
+        if (prev == nil) {
+            views = NSDictionaryOfVariableBindings(control);
+
+            // Center horizontally
+            [editor addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[control(<=w)]|"
+                                                                           options:NSLayoutFormatAlignAllTop
+                                                                           metrics:metrics
+                                                                             views:views]];
+
+            // add to the top of the editor and constraint the height
+            [editor addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"V:|[control(>=ch)]"
+                                                                           options:NSLayoutFormatAlignAllLeft
+                                                                           metrics:metrics
+                                                                             views:views]];
+            
+            // add trailing constraint, and break it if another control is added
+            // this indicates the control as the last one
+            breakableConstraints = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[control]-|"
+                                                                           options:NSLayoutFormatAlignAllLeft
+                                                                           metrics:metrics
+                                                                             views:views];
+            [editor addConstraints:breakableConstraints];
+        }
+        else {
+            views = NSDictionaryOfVariableBindings(control,prev);
+            
+            // Center horizontally
+            [editor addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[control(<=w)]|"
+                                                                           options:NSLayoutFormatAlignAllTop
+                                                                           metrics:metrics
+                                                                             views:views]];
+            // break the previous vertical constraint
+            [editor removeConstraints:breakableConstraints];
+            
+            NSString* layout = @"V:[prev]-[control(>=ch)]";
+            if ([prev isKindOfClass:[LabelView class]] && [control isKindOfClass:[LabelView class]]) {
+                // just remove the spacing between consecutive labels, looks nicer
+                layout = @"V:[prev][control(>=ch)]"; // remove this small magic '-'
+            }
+            // stack under the previous control
+            [editor addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:layout
+                                                                           options:NSLayoutFormatAlignAllLeft
+                                                                           metrics:metrics
+                                                                             views:views]];
+            // this is now the last one
+            breakableConstraints = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[control]-|"
+                                                                           options:NSLayoutFormatAlignAllLeft
+                                                                           metrics:metrics
+                                                                             views:views];
+            [editor addConstraints:breakableConstraints];
+            
+        }
+        
+        
+        prev = control;
     }
-    [controls release];
     
-    [editor setFrameSize:NSMakeSize(w-1, y + yinc + 100)];
+    [[self scrollView] setDocumentView:editor];
+}
+
+-(void) onUISignal:(Event) event {
+    EditorView* editor = [_scrollView documentView];
+    if (editor == nil) {
+        return;
+    }
+    
+    NSArray *views = [editor subviews];
+    
+    for (id view : views) {
+        id<CustomControl> current = view;
+        if ([current controlCode] == event.Change.code) {
+            [current setCurrentIntValue:event.Change.intValue];
+            [current setCurrentStringValue:[NSString stringWithFormat:@"%s", event.Change.stringValue.c_str()]];
+            return;
+        }
+    }
 }
 
 -(void) log:(NSString*) input withOutput:(NSString*) output {

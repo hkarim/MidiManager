@@ -10,12 +10,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../../Source/UI/NativeEditorController.mm"
-            timestampString = "432837948.476242"
+            timestampString = "432948725.602404"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "40"
-            endingLineNumber = "40"
-            landmarkName = "-createWidget:"
+            startingLineNumber = "320"
+            endingLineNumber = "320"
+            landmarkName = "-onCreateUI:"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
