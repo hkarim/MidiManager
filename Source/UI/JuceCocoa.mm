@@ -54,6 +54,22 @@ void* JuceCocoa::createNSView() {
     return view;
 }
 
+double JuceCocoa::currentHeight() {
+    if (this->controller != nil) {
+        NativeEditorController* c = (NativeEditorController*) this->controller;
+        return [[c view] frame].size.height;
+    }
+    return 0.0f;
+}
+
+double JuceCocoa::currentWidth() {
+    if (this->controller != nil) {
+        NativeEditorController* c = (NativeEditorController*) this->controller;
+        return [[c view] frame].size.width;
+    }
+    return 0.0f;
+}
+
 
 void JuceCocoa::onEvent(const Event& event) {
     

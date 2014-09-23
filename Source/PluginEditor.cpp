@@ -27,7 +27,8 @@ MidiManagerAudioProcessorEditor::MidiManagerAudioProcessorEditor (MidiManagerAud
     addAndMakeVisible(nsviewComponent);
     void* view = ownerFilter->getJuceCocoa()->createNSView();
     nsviewComponent.setView(view);
-    setSize(currentWidth, currentHeight);
+    
+    setSize(ownerFilter->getJuceCocoa()->currentWidth(), ownerFilter->getJuceCocoa()->currentHeight());
 }
 
 MidiManagerAudioProcessorEditor::~MidiManagerAudioProcessorEditor()
@@ -38,9 +39,9 @@ MidiManagerAudioProcessorEditor::~MidiManagerAudioProcessorEditor()
 }
 
 void MidiManagerAudioProcessorEditor::resized() {
-    //MidiManagerAudioProcessor* processor = dynamic_cast<MidiManagerAudioProcessor*>(getAudioProcessor());
-    setSize(currentWidth, currentHeight);
-    nsviewComponent.setBounds(0, 0, currentWidth, currentHeight);
+    MidiManagerAudioProcessor* processor = dynamic_cast<MidiManagerAudioProcessor*>(getAudioProcessor());
+    setSize(processor->getJuceCocoa()->currentWidth(), processor->getJuceCocoa()->currentHeight());
+    nsviewComponent.setBounds(0, 0, processor->getJuceCocoa()->currentWidth(), processor->getJuceCocoa()->currentHeight());
 }
 
 void MidiManagerAudioProcessorEditor::onEvent(const Event& event) {

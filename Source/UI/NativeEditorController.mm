@@ -7,6 +7,7 @@
 //
 
 #import "NativeEditorController.h"
+#import "NS(Attributed)String+Geometrics.h"
 #include <sstream>
 
 @interface NativeEditorController ()
@@ -35,6 +36,7 @@ __weak MessageBus* bus;
     
     [super dealloc];
 }
+
 
 -(id<CustomControl>) createWidget:(UIWidget*) widget {
     switch (widget->widgetType) {
@@ -68,7 +70,7 @@ __weak MessageBus* bus;
     UIWidgetSlider* control = static_cast<UIWidgetSlider*>(widget);
     NSString* name = [NSString stringWithFormat:@"%s", control->name.c_str()];
     
-    NSRect frame = [[[self scrollView] documentView] frame];
+    NSRect frame = [[[self scrollView] contentView] frame];
     
     SliderView* view = [[SliderView alloc] init];
     view.controlCode = control->code;
@@ -90,7 +92,7 @@ __weak MessageBus* bus;
     UIWidgetSegmented* control = static_cast<UIWidgetSegmented*>(widget);
     NSString* name = [NSString stringWithFormat:@"%s", control->name.c_str()];
     
-    NSRect frame = [[[self scrollView] documentView] frame];
+    NSRect frame = [[[self scrollView] contentView] frame];
     
     NSMutableArray* labels = [NSMutableArray new];
     
@@ -117,7 +119,7 @@ __weak MessageBus* bus;
     UIWidgetPopUp* control = static_cast<UIWidgetPopUp*>(widget);
     NSString* name = [NSString stringWithFormat:@"%s", control->name.c_str()];
     
-    NSRect frame = [[[self scrollView] documentView] frame];
+    NSRect frame = [[[self scrollView] contentView] frame];
     
     NSMutableArray* labels = [NSMutableArray new];
     
@@ -144,7 +146,7 @@ __weak MessageBus* bus;
     UIWidgetCheckBox* control = static_cast<UIWidgetCheckBox*>(widget);
     NSString* name = [NSString stringWithFormat:@"%s", control->name.c_str()];
     
-    NSRect frame = [[[self scrollView] documentView] frame];
+    NSRect frame = [[[self scrollView] contentView] frame];
     
     CheckBoxView* view = [[CheckBoxView alloc] init];
     view.controlCode = control->code;
@@ -164,7 +166,7 @@ __weak MessageBus* bus;
     UIWidgetLabel* control = static_cast<UIWidgetLabel*>(widget);
     NSString* name = [NSString stringWithFormat:@"%s", control->name.c_str()];
     
-    NSRect frame = [[[self scrollView] documentView] frame];
+    NSRect frame = [[[self scrollView] contentView] frame];
     
     LabelView* view = [[LabelView alloc] init];
     view.controlCode = control->code;
@@ -189,6 +191,8 @@ __weak MessageBus* bus;
 
 -(Event) initEvent {
     Event event {};
+    //[[self view] setFrameSize:NSMakeSize(400, 300)];
+    //[[self scrollView] setFrameSize:NSMakeSize(400, 300)];
     NSRect rect = [[self view] frame];
     event.ViewCoordinates.w = rect.size.width;
     event.ViewCoordinates.h = rect.size.height;
@@ -199,7 +203,7 @@ __weak MessageBus* bus;
     
 
     self.loadedFileName = @"Nothing Loaded right now";
-    self.errors = @"No errors";
+    self.errors = [self stringForErrorsView:@"No errors"];
     
     Event e = [self initEvent];
     
@@ -247,16 +251,33 @@ __weak MessageBus* bus;
     
 }
 
+-(NSAttributedString*) stringForErrorsView:(NSString*) input {
+    NSFont* font = [NSFont fontWithName:@"Menlo" size:14];
+    NSColor* inColor = [NSColor colorWithCalibratedRed:(255/255.0f) green:(189/255.0f) blue:(100/255.0f) alpha:1];
+    NSDictionary* inAttributes =
+    @{
+      NSFontAttributeName :font,
+      NSForegroundColorAttributeName :inColor
+      };
+    
+    NSAttributedString* inattr = [[NSAttributedString alloc] initWithString:input attributes:inAttributes];
+    return inattr;
+}
+
+-(NSAttributedString*) stringForErrorsViewFromStdString:(const std::string&) input {
+    return [self stringForErrorsView: [NSString stringWithFormat:@"%s", input.c_str()]];
+}
+
 -(void) onScriptErrors: (const Event&) event {
-    [self setErrors:[NSString stringWithFormat:@"%s", event.ScriptData.compilationErrors.c_str()]];
+    [self setErrors:[self stringForErrorsViewFromStdString: event.ScriptData.compilationErrors]];
 }
 
 -(void) onRestoreState: (const Event&) event {
     [self setLoadedFileName:[NSString stringWithFormat:@"%s", event.FileData.filename.c_str()]];
     if (!event.ScriptData.compilationErrors.empty()) {
-        [self setErrors:[NSString stringWithFormat:@"%s", event.ScriptData.compilationErrors.c_str()]];
+        [self setErrors:[self stringForErrorsViewFromStdString: event.ScriptData.compilationErrors]];
     } else {
-        [self setErrors:@"Compiled Successfully"];
+        [self setErrors:[self stringForErrorsView: @"Compiled Successfully"]];
         if (!event.FileData.filename.empty() && !event.UI.widgets.empty()) {
             [self onCreateUI:event];
         }
@@ -320,7 +341,7 @@ __weak MessageBus* bus;
             views = NSDictionaryOfVariableBindings(control);
 
             // Center horizontally
-            [editor addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[control(<=w)]|"
+            [editor addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[control(==w)]|"
                                                                            options:NSLayoutFormatAlignAllTop
                                                                            metrics:metrics
                                                                              views:views]];
@@ -343,7 +364,7 @@ __weak MessageBus* bus;
             views = NSDictionaryOfVariableBindings(control,prev);
             
             // Center horizontally
-            [editor addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[control(<=w)]|"
+            [editor addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[control(==w)]|"
                                                                            options:NSLayoutFormatAlignAllTop
                                                                            metrics:metrics
                                                                              views:views]];
@@ -452,6 +473,7 @@ __weak MessageBus* bus;
 
 - (IBAction)loadScriptClicked:(NSButton *)sender {
     NSArray* files = [self openFiles];
+    self.errors = [self stringForErrorsView:@"Compiling, Please wait"];
     if (files) {
         Event e = [self initEvent];
         e.uiEvent = UIEvent::FileChosen;

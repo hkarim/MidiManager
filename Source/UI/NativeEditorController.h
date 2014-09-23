@@ -16,7 +16,7 @@ class NativeEditorControllerListener;
 
 @interface NativeEditorController : NSViewController {
     NSString* loadedFileName;
-    NSString* errors;
+    NSAttributedString* errors;
     BOOL debug;
     BOOL silenceOnErrors;
     NativeEditorControllerListener* listener;
@@ -25,7 +25,7 @@ class NativeEditorControllerListener;
 
 
 @property (copy) NSString* loadedFileName;
-@property (copy) NSString* errors;
+@property (copy) NSAttributedString* errors;
 @property BOOL debug;
 @property BOOL silenceOnErrors;
 

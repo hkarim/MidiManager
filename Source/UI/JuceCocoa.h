@@ -22,6 +22,8 @@ public:
     void* createNSView();
     void onEvent(const Event& event);
     void releaseController();
+    double currentHeight();
+    double currentWidth();
 };
 
 

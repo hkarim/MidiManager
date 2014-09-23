@@ -1,24 +1,54 @@
+#! --nosymbolic
 using midi;
 using ui;
 using set;
+using native;
+using system;
 
-let pattern_ch_ref = ref 0;
-pattern_ch         = get pattern_ch_ref;
-let chord_ch_ref   = ref 1;
-chord_ch           = get chord_ch_ref;
-let output_ch_ref  = ref 0;
-output_ch          = get output_ch_ref;
-
-pattern_ch_control = ui::Slider "Pattern Channel" (pattern_ch+1) 1 16 (\v-> put pattern_ch_ref (v-1));
-chord_ch_control = ui::Slider "Chord Channel" (chord_ch+1) 1 16 (\v-> put chord_ch_ref (v-1));
-output_ch_control = ui::Slider "Output Channel" (output_ch+1) 1 16 (\v-> put output_ch_ref (v-1));
 
 let chordref = ref (set []);
 chord = list (get chordref);
 chord_add n::int = put chordref (insert (get chordref) n);
 chord_rm  n::int = put chordref (delete (get chordref) n);
 
-create_ui = [pattern_ch_control, chord_ch_control, output_ch_control];
+const desc = 
+  "Pattern Maker creates notes following your settings:\n" +
+  "1. Insert some chords on a channel and adjust the Chord Channel to it\n" +
+  "2. Insert some pattern notes on another channel and adjust the Pattern Channel, \n"+
+  "   - To play a whole chord, place a note on C0 or C1 and so on.\n" +
+  "     Transposition will occur according to the input chord base.\n" +
+  "     For example, if the chord base is F3 and you place a pattern note on C0, no transposition will occur, while if\n" +
+  "     you place a note C1 on the pattern channel, the whole chord will be played transpose a whole octave\n" +
+  "   - To play the first note in a chord, place a note at C#0 or C#1\n" +
+  "   - To play the second note in a chord, place a note at D0 or D1, .. and so on\n" +
+  "3. Make some noise\n"
+  ;
+
+let desc_control = ui::Label "Pattern Maker" desc;
+let pattern_ch_control = ui::Slider "Pattern Channel" 1 1 16 ui::no_action;
+let chord_ch_control = ui::Slider "Chord Channel" 1 1 16 ui::no_action;
+let output_ch_control = ui::Slider "Output Channel" 1 1 16 ui::no_action;
+
+pattern_ch         = (ui::value pattern_ch_control) - 1;
+chord_ch           = (ui::value chord_ch_control) - 1;
+output_ch          = (ui::value output_ch_control) - 1;
+
+
+create_ui = [pattern_ch_control,chord_ch_control, output_ch_control/*, desc_control*/];
+
+save_state = 
+  {
+    "pattern_ch_control" => pattern_ch + 1,
+    "chord_ch_control"   => chord_ch + 1,
+    "output_ch_control"  => output_ch + 1
+  };
+
+restore_state r::record =
+  ui::set_value pattern_ch_control ( r ! "pattern_ch_control" ) $$
+  ui::set_value chord_ch_control   ( r ! "chord_ch_control"   ) $$
+  ui::set_value output_ch_control  ( r ! "output_ch_control"  )
+  ;
+
 
 process_midi_buffer buf::midi_buffer_t = // buf is on the form [(event, position)...]
   result with
@@ -26,11 +56,17 @@ process_midi_buffer buf::midi_buffer_t = // buf is on the form [(event, position
     split buf::midi_buffer_t =
       foldl spl [[],[],[]] buf with
         spl [notes_on_off, chord_notes_on_off, pass_through] ep = 
-          [notes_on_off + [ep], chord_notes_on_off, pass_through] if (is_note_on_or_off ep) && (get_channel ep) == pattern_ch;
+          [ep : notes_on_off, chord_notes_on_off, pass_through] 
+            if (is_note_on_or_off ep) && (get_channel ep) == pattern_ch;
         spl [notes_on_off, chord_notes_on_off, pass_through] ep = 
-          [notes_on_off, chord_notes_on_off + [ep], pass_through] if (is_note_on_or_off ep) && (get_channel ep) == chord_ch;
+          [notes_on_off, ep : chord_notes_on_off, pass_through] 
+            if (is_note_on_or_off ep) && (get_channel ep) == chord_ch;
         spl [notes_on_off, chord_notes_on_off, pass_through] ep = 
-          [notes_on_off, chord_notes_on_off, pass_through + [ep]] otherwise;
+          [notes_on_off, chord_notes_on_off, ep: pass_through]  
+            if (get_channel ep) == pattern_ch || (get_channel ep) == chord_ch;
+        spl [notes_on_off, chord_notes_on_off, pass_through] ep = 
+          [notes_on_off, chord_notes_on_off, pass_through]  
+            otherwise;
       end;
 
     result = 
@@ -51,6 +87,7 @@ update_chord buf::midi_buffer_t =
   end;
 
 note_off_on_all_octaves ep::event_position_t =
+  //debug ("all off: " + str (get_note ep)) $$
   map (\octave -> note_off_tuple output_ch ((octave * 12) + ((get_note ep) mod 12)) (position ep))(0..9);
 
 mk_notes ep::event_position_t =
@@ -58,14 +95,14 @@ mk_notes ep::event_position_t =
     on = is_note_on ep;
     off = is_note_off ep;
     n = get_note ep;
-    c = output_ch; //get_channel ep;
+    c = output_ch; 
     v = if on then get_velocity ep else 0;
     p = position ep;
     distance_from_base = n mod 12;
     octave = n div 12;
     transpose = octave * 12;
     chord_note d =  (chord!(d-1)) + transpose;
-    process =
+    process = 
        case distance_from_base of
         0 = chord_on c v transpose p if on;
         0 = chord_off c transpose p if off;
@@ -81,7 +118,10 @@ chord_on channel::int velocity::int transpose::int position::int =
   map (\n -> note_on_tuple channel (n+transpose) velocity position) chord;
 
 chord_off channel::int transpose::int position::int =
-  map (\n -> note_off_tuple channel (n+transpose) position) chord;
+  result with
+    off_notes = map (\n -> note_off_tuple channel (n+transpose) position) chord;
+    result = off_notes; 
+  end;
 
 
 

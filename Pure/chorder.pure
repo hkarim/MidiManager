@@ -1,7 +1,10 @@
+#! --nosymbolic
+
 using midi;
 using ui;
 using dict;
 using native;
+using system;
 
 const chords = {
       maj      => [0,4,7],
@@ -58,38 +61,24 @@ let scale =  ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
 // Chord Degrees and supporting functions
 let tonic = dict ["Maj" => chords!maj, "Maj7" => chords!maj7, "Maj9" => chords!maj9, "Maj11" => chords!maj11, "Maj13" => chords!maj13];
 let tonic_keys = ["Maj", "Maj7", "Maj9", "Maj11", "Maj13"];
-let tonic_chord_ref = ref 0;
-tonic_chord = get tonic_chord_ref;
 
 let supertonic = dict ["m" => chords!m, "m6" => chords!m6, "m7" => chords!m7, "m9" => chords!m9, "m11" => chords!m11];
 let supertonic_keys = ["m", "m6", "m7", "m9", "m11"];
-let supertonic_chord_ref = ref 0;
-supertonic_chord = get supertonic_chord_ref;
 
 let mediant = dict ["m" => chords!m, "m7" => chords!m7];
 let mediant_keys = ["m", "m7"];
-let mediant_chord_ref = ref 0;
-mediant_chord = get mediant_chord_ref;
 
-let subdominant = dict ["Maj "=> chords!maj, "Maj7"=> chords!maj7, "Maj9"=> chords!maj9, "Maj13"=> chords!maj13];
+let subdominant = dict ["Maj" => chords!maj, "Maj7" => chords!maj7, "Maj9" => chords!maj9, "Maj13" => chords!maj13];
 let subdominant_keys = ["Maj", "Maj7", "Maj9", "Maj13"];
-let subdominant_chord_ref = ref 0;
-subdominant_chord = get subdominant_chord_ref;
 
 let dominant = dict ["Maj" => chords!maj, "7"=> chords!dom7, "11"=> chords!eleventh, "sus4"=> chords!sus4, "13"=> chords!thirteenth];
 let dominant_keys = ["Maj", "7", "11", "sus4", "13"];
-let dominant_chord_ref = ref 0;
-dominant_chord = get dominant_chord_ref;
 
 let submediant = dict ["m" => chords!m, "m7"=> chords!m7, "m9"=> chords!m9, "m11"=> chords!m11];
 let submediant_keys = ["m", "m7", "m9", "m11"];
-let submediant_chord_ref = ref 0;
-submediant_chord = get submediant_chord_ref;
 
 let leading = dict ["m7b5" => chords!m7b5];
 let leading_keys = ["m7b5"];
-let leading_chord_ref = ref 0;
-leading_chord = get leading_chord_ref;
 
 
 // User Interface
@@ -103,11 +92,6 @@ const desc =
   "the same goes for supertonic (D note in a C major scale) and so on";
 
 
-// Dynamic variables
-let transposition_ref = ref 0;
-transposition = get transposition_ref;
-let add_base_note_ref = ref 1;
-add_base_note = get add_base_note_ref;
 
 // UI Handlers
 format_chords =
@@ -136,30 +120,40 @@ format_chords =
         leading_c;
   end;
 
-change_chords = signal (ui::code chords_control) format_chords;
+//change_chords = signal (ui::code chords_control) format_chords;
+change_chords = ui::send chords_control format_chords;
 
 
 // Controls, MUST be variables (defined using let keyword) for UI signals and callbacks to work
-let chords_control = ui::Label "Chords" format_chords (\x -> x);
-let transposition_control = ui::Segmented "Scale Tonic" transposition scale (\v -> put transposition_ref v $$ change_chords);
-let scale_control = ui::Segmented "Scale" 0 ["Major", "Minor"] (\v -> v);
-let tonic_control = ui::Segmented "Tonic" 0 tonic_keys (\v -> put tonic_chord_ref v $$ change_chords);
-let supertonic_control = ui::Segmented "Supertonic" 0 supertonic_keys (\v -> put supertonic_chord_ref v $$ change_chords);
-let mediant_control = ui::Segmented "Mediant" 0 mediant_keys (\v -> put mediant_chord_ref v $$ change_chords);
-let subdominant_control = ui::Segmented "Subdominant" 0 subdominant_keys (\v -> put subdominant_chord_ref v $$ change_chords);
-let dominant_control = ui::Segmented "Dominant" 0 dominant_keys (\v -> put dominant_chord_ref v $$ change_chords);
-let submediant_control = ui::Segmented "Submediant" 0 submediant_keys (\v -> put submediant_chord_ref v $$ change_chords);
-let leading_control = ui::Segmented "Leading" 0 leading_keys (\v -> put leading_chord_ref v $$ change_chords);
-let base_note_control = ui::CheckBox "Add Base Note" add_base_note (put add_base_note_ref $$ change_chords);
-let desc_control = ui::Label "Description" desc (\x -> x);
-let author_control = ui::Label "Author" "Hossam Karim - (c) 2014" (\x -> x);
+let chords_control = ui::Label "Chords" "";
+let transposition_control = ui::Segmented "Scale Tonic" 0 scale (\_ -> change_chords);
+let tonic_control = ui::Segmented "Tonic" 0 tonic_keys (\_ -> change_chords);
+let supertonic_control = ui::Segmented "Supertonic" 0 supertonic_keys (\_ -> change_chords);
+let mediant_control = ui::Segmented "Mediant" 0 mediant_keys (\_ -> change_chords);
+let subdominant_control = ui::Segmented "Subdominant" 0 subdominant_keys (\_ -> change_chords);
+let dominant_control = ui::Segmented "Dominant" 0 dominant_keys (\_ -> change_chords);
+let submediant_control = ui::Segmented "Submediant" 0 submediant_keys (\_ -> change_chords);
+let leading_control = ui::Segmented "Leading" 0 leading_keys (\_ -> change_chords);
+let base_note_control = ui::CheckBox "Add Base Note" 1 ui::no_action;
+let last_chord_control = ui::Label "Last Recognized Chord" "None";
+let desc_control = ui::Label "Description" desc;
+let author_control = ui::Label "Author" "Hossam Karim - (c) 2014";
+
+transposition     = ui::value transposition_control;
+base_note         = ui::value base_note_control;
+tonic_chord       = ui::value tonic_control;
+supertonic_chord  = ui::value supertonic_control;
+mediant_chord     = ui::value mediant_control;
+subdominant_chord = ui::value subdominant_control;
+dominant_chord    = ui::value dominant_control;
+submediant_chord  = ui::value submediant_control;
+leading_chord     = ui::value leading_control;
 
 
 // UI Callback
 create_ui =
   [
     transposition_control,
-    //scale_control,
     base_note_control,
     chords_control,
     tonic_control,
@@ -169,10 +163,42 @@ create_ui =
     dominant_control,
     submediant_control,
     leading_control,
+    last_chord_control,
     desc_control,
     author_control
   ];
 
+save_state =
+  { 
+    "transposition_control" => transposition,
+    "base_note_control" => base_note,
+    "tonic_control" => tonic_chord,
+    "supertonic_control" => supertonic_chord,
+    "mediant_control" => mediant_chord,
+    "subdominant_control" => subdominant_chord,
+    "dominant_control" => dominant_chord,
+    "submediant_control" => submediant_chord,
+    "leading_control" => leading_chord
+  };
+
+restore_state r::record = 
+  map set_state (keys r) with
+    set_state key =
+      case key of
+        "transposition_control" = ui::set_value transposition_control (r!key);
+        "base_note_control"     = ui::set_value base_note_control (r!key); 
+        "tonic_control"         = ui::set_value tonic_control (r!key);
+        "supertonic_control"    = ui::set_value supertonic_control (r!key);
+        "mediant_control"       = ui::set_value mediant_control (r!key);
+        "subdominant_control"   = ui::set_value subdominant_control (r!key);
+        "dominant_control"      = ui::set_value dominant_control (r!key);
+        "submediant_control"    = ui::set_value submediant_control (r!key);
+        "leading_control"       = ui::set_value leading_control (r!key);
+        _                       = puts $ "unkown property: " + key;
+      end;
+  end;
+
+  
 
 // Midi Processing
 process_midi_buffer buf::midi_buffer_t = 
@@ -212,17 +238,19 @@ pick_interval t::event_position_t =
       name = scale ! nor;
       intervals = 
       case nor of
-          0 = vals tonic ! tonic_chord;
-          2 = vals supertonic ! supertonic_chord;
-          4 = vals mediant ! mediant_chord;  
-          5 = vals subdominant ! subdominant_chord;
-          7 = vals dominant ! dominant_chord;  
-          9 = vals submediant ! submediant_chord;
-          11= vals leading ! leading_chord;  
-          _ = debug ("No chord configured for " + name + " in current scale") $$ [];
+          0 = tonic ! (tonic_keys ! tonic_chord);
+          2 = supertonic ! (supertonic_keys ! supertonic_chord);
+          4 = mediant ! (mediant_keys ! mediant_chord);  
+          5 = subdominant ! (subdominant_keys ! subdominant_chord);
+          7 = dominant ! (dominant_keys ! dominant_chord);  
+          9 = submediant ! (submediant_keys ! submediant_chord);
+          11= leading ! (leading_keys ! leading_chord);  
+          _ = [];
       end;
-      result = if add_base_note == 1 then (-12 : intervals) else intervals;
+      result = if base_note == 1 then (-12 : intervals) else intervals;
   end;
 
-chord_on_off intervals::list t::event_position_t = map (transpose_note t) intervals; 
+chord_on_off intervals::list t::event_position_t = 
+  ui::send last_chord_control (chord_name t) $$
+  map (transpose_note t) intervals; 
 

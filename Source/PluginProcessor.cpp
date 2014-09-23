@@ -207,21 +207,12 @@ void MidiManagerAudioProcessor::releaseResources()
 
 void MidiManagerAudioProcessor::processBlock (AudioSampleBuffer& buffer, MidiBuffer& midiMessages)
 {
-    MidiBuffer out;
+    //MidiBuffer out;
     bool noErrors = pureLink && !pureLink->hasErrors();
     
     std::lock_guard<std::mutex> lock(pureLinkMutex);
     if (noErrors) {
-        out = pureLink->processBlock(midiMessages);
-    } else {
-        out = midiMessages;
-    }
-    MidiBuffer::Iterator cp(out);
-    MidiMessage cpm;
-    int sp;
-    midiMessages.clear();
-    while (cp.getNextEvent(cpm, sp)) {
-        midiMessages.addEvent(cpm, sp);
+        midiMessages = std::move(pureLink->processBlock(midiMessages));
     }
 }
 
@@ -248,6 +239,7 @@ void MidiManagerAudioProcessor::getStateInformation (MemoryBlock& destData)
         ValueTree tree { String { "DefaultValueTree" } };
         MemoryOutputStream out { destData , false };
         tree.setProperty(Identifier { "filename" }, var { String(pureLink->getFilename()) }, nullptr);
+        tree.setProperty(Identifier { "pureState" }, var { String(pureLink->getState()) }, nullptr);
         tree.writeToStream(out);
     }
     
@@ -260,6 +252,7 @@ void MidiManagerAudioProcessor::setStateInformation (const void* data, int sizeI
     //printf("MidiManagerAudioProcessor::setStateInformation\n");
     ValueTree tree = ValueTree::readFromData(data, sizeInBytes);
     const var filename = tree.getProperty(Identifier { "filename" } );
+    const var pureState = tree.getProperty(Identifier { "pureState" } );
     if (filename.isString()) {
         std::string name = filename.toString().toStdString();
         //printf("MidiManagerAudioProcessor::setStateInformation: %s\n", name.c_str());
@@ -267,6 +260,13 @@ void MidiManagerAudioProcessor::setStateInformation (const void* data, int sizeI
         e.uiEvent = UIEvent::FileChosen;
         e.FileData.filename = name;
         bus->publish(e);
+    }
+    
+    if (pureState.isString()) {
+        std::string state = pureState.toString().toStdString();
+        if (pureLink) {
+            pureLink->setState(state);
+        }
     }
     
 }

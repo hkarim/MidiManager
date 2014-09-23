@@ -1,12 +1,23 @@
 using dict;
 using midi;
+using ui;
 
-const channel_dict = dict [ 0 => 1 , 1 => 2 ];
+let in_ch_ref = ref 0;
+in_ch = get in_ch_ref;
+
+let out_ch_ref = ref 0;
+out_ch = get out_ch_ref;
+
+let input_channel = ui::Slider "Input Channel" (in_ch+1) 1 16 (\v -> put in_ch_ref (v+1));
+let output_channel = ui::Slider "Output Channel" (out_ch+1) 1 16 (\v -> put out_ch_ref (v+1));
+
+
+create_ui = [input_channel, output_channel];
 
 process_midi_buffer buf::midi_buffer_t =
   map change_channel buf with
   change_channel t =
-      if member channel_dict (get_channel t)
-      then set_channel t (channel_dict!(get_channel t))
+      if (get_channel t) == in_ch
+      then set_channel t out_ch 
       else t;
   end;

@@ -26,7 +26,6 @@ enum class UIEvent : unsigned int {
     Logging,
     EditorWidgetChanged,
     UISignal
-    //CreateUI
 };
 
 enum class UIWidgetType : int {
@@ -62,8 +61,12 @@ struct UIWidget {
     int code;
     std::string name;
     virtual ~UIWidget() {}
+    virtual bool isValuePropertyInt() = 0;
+    virtual bool isValuePropertyString() = 0;
     virtual int currentIntValue() { return 0; }
+    virtual void setCurrentIntValue(int value) {}
     virtual std::string currentStringValue() { return ""; }
+    virtual void setCurrentStringValue(const std::string& value) {}
 };
 
 struct UIWidgetSlider : UIWidget {
@@ -71,33 +74,48 @@ struct UIWidgetSlider : UIWidget {
     int minimum;
     int maximum;
     int value;
+    virtual bool isValuePropertyInt() { return true; }
+    virtual bool isValuePropertyString() { return false; }
     virtual int currentIntValue() { return value; }
+    virtual void setCurrentIntValue(int value) { this->value = value; }
 };
     
 struct UIWidgetSegmented : UIWidget {
     UIWidgetSegmented() : UIWidget {} { widgetType = UIWidgetType::Segmented; }
     int value;
     std::vector<std::string> labels;
+    virtual bool isValuePropertyInt() { return true; }
+    virtual bool isValuePropertyString() { return false; }
     virtual int currentIntValue() { return value; }
+    virtual void setCurrentIntValue(int value) { this->value = value; }
 };
 
 struct UIWidgetPopUp : UIWidget {
     UIWidgetPopUp() : UIWidget {} { widgetType = UIWidgetType::PopUp; }
     int value;
     std::vector<std::string> labels;
+    virtual bool isValuePropertyInt() { return true; }
+    virtual bool isValuePropertyString() { return false; }
     virtual int currentIntValue() { return value; }
+    virtual void setCurrentIntValue(int value) { this->value = value; }
 };
     
 struct UIWidgetCheckBox : UIWidget {
     UIWidgetCheckBox() : UIWidget {} { widgetType = UIWidgetType::CheckBox; }
     int value;
+    virtual bool isValuePropertyInt() { return true; }
+    virtual bool isValuePropertyString() { return false; }
     virtual int currentIntValue() { return value; }
+    virtual void setCurrentIntValue(int value) { this->value = value; }
 };
     
 struct UIWidgetLabel : UIWidget {
     UIWidgetLabel() : UIWidget {} { widgetType = UIWidgetType::Label; }
     std::string value;
+    virtual bool isValuePropertyInt() { return false; }
+    virtual bool isValuePropertyString() { return true; }
     virtual std::string currentStringValue() { return value; }
+    virtual void setCurrentStringValue(const std::string& value) { this->value = value; }
 };
 
 struct Event {
@@ -136,6 +154,9 @@ struct Event {
         std::string stringValue;
     } Change;
 };
+    
+    
+
 
 class EventListener {
 public:
@@ -189,7 +210,24 @@ public:
     }
     
 };
+    
 
 
 
 #endif /* defined(__MidiManager__MessageBus__) */
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

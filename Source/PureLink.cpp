@@ -104,22 +104,32 @@ void pure_link_signal_str(pure_expr* pureLinkPointer, int widgetCode, const char
     }
 }
 
+void message_bus_publish(pure_expr* messageBusPointer) {
+    
+}
+
 
 
 const std::string processMidiBufferF = "process_midi_buffer";
 const std::string isMidiBufferTF     = "is_midi_buffer";
 const std::string createUIF          = "create_ui";
+const std::string saveStateF         = "save_state";
+const std::string restoreStateF      = "restore_state";
 const std::string pureLinkVar        = "pure_link";
+const std::string messageBusVar      = "message_bus";
+
 
 const std::string typeTagProperty    = "ui::type_tag" ;
 const std::string codeProperty       = "ui::code" ;
 const std::string nameProperty       = "ui::name" ;
 const std::string actionProperty     = "ui::action";
 const std::string valueProperty      = "ui::value";
+const std::string setValueF          = "ui::set_value";
 const std::string allWidgetsF        = "ui::all_widgets";
 const std::string isWidgetF          = "ui::is_widget";
-const std::string addWidgetF         = "ui::add_widget";
-const std::string rmWidgetF          = "ui::rm_widget";
+
+
+
 
 
 
@@ -160,14 +170,8 @@ PureLink::~PureLink() {
         WidgetAction* wa = p.second;
         if (wa) delete wa;
     }
+    
     widgetMap.clear();
-    
-    for (UIWidget* w : widgetVector) {
-        if (w) delete w;
-    }
-    widgetVector.clear();
-    
-    
     
     if (debug) printf("deleting blocks\n");
     
@@ -211,14 +215,19 @@ void PureLink::init() {
             pure_interp_compile(interp, createUISymbol);
             initUI();
         }
-
-        
         
         // inject PureLink instance
         int32_t pureLinkInstanceSymbol = pure_sym(pureLinkVar.c_str());
         if (pureLinkInstanceSymbol) {
             pure_expr* pointer = pure_new(pure_pointer((void*) this));
             pure_let(pureLinkInstanceSymbol, pointer);
+        }
+        
+        // inject MessageBus instance
+        int32_t messageBusInstanceSymbol = pure_sym(messageBusVar.c_str());
+        if (messageBusInstanceSymbol) {
+            pure_expr* pointer = pure_new(pure_pointer((void*) bus));
+            pure_let(messageBusInstanceSymbol, pointer);
         }
         
     } else {
@@ -231,9 +240,102 @@ void PureLink::init() {
         errors = strdup(errstr);
         clear_lasterr();
     }
+    
+    // unlock main interp
     pure_unlock_interp(local);
 }
+        
+const std::string PureLink::getState() {
+    if (debug) printf("OnGetState: <PureLink %p>\n", this);
+    
+    std::lock_guard<std::mutex> lock(mutex);
+    pure_interp* local = pure_lock_interp(interp);
+    
+    std::string state = "";
+    
 
+        
+    pure_expr* saveState = nullptr;
+    int32_t saveStateFSymbol = pure_getsym(saveStateF.c_str());
+    if (saveStateFSymbol != 0 ) {
+        saveState = pure_symbol(saveStateFSymbol);
+    }
+    
+    if(saveState == nullptr) {
+        pure_unlock_interp(local);
+        return state;
+    }
+    
+    pure_expr* exceptions = nullptr;
+    
+    pure_expr* stateex = pure_appxv(saveState, 0, nullptr, &exceptions);
+    if (exceptions) {
+        report("getState", exceptions);
+        pure_unlock_interp(local);
+        return state;
+    }
+    
+    state = str(stateex);
+    if (debug) printf("getState: %s\n", str(stateex));
+    pure_unlock_interp(local);
+        
+    return state;
+    
+}
+        
+void PureLink::setState(const std::string& state) {
+    if (debug) printf("OnSetState: <PureLink %p>\n", this);
+    if (debug) printf("Juce State sent: %s\n", state.c_str());
+    
+    std::lock_guard<std::mutex> lock(mutex);
+    pure_interp* local = pure_lock_interp(interp);
+    
+    pure_expr* stateex = pure_eval(state.c_str());
+    bool stateRestored = true;
+    if (stateex) {
+        if (debug) printf("setState: %s\n", str(stateex));
+        pure_expr* restoreState = nullptr;
+        int32_t restoreStateFSymbol = pure_getsym(restoreStateF.c_str());
+        if (restoreStateFSymbol != 0 ) {
+            restoreState = pure_symbol(restoreStateFSymbol);
+            if (restoreState) {
+                pure_expr* args[] = { stateex };
+                pure_expr* exceptions = nullptr;
+                pure_appxv(restoreState, 1, args, &exceptions);
+                if (exceptions) {
+                    report("setState", exceptions);
+                    stateRestored = false; // prevent other processing below
+                }
+            }
+        }
+        pure_free(stateex);
+    }
+    
+    if (! stateRestored) {
+        pure_unlock_interp(local);  // remember to unlock
+        return; // no need to continue, since the state is wrong
+    }
+
+    
+    
+    // After the pure script has restored its state, we need to sync our state
+    // so that when the editor restores its state, we provide the correct values
+    // see: MidiManagerAudioProcessor::restoreEditorState()
+    
+    for (auto pair : widgetMap) {
+        WidgetAction* wa = pair.second;
+        UIWidget* w = wa->widget();
+        pure_expr* pureWidget = wa->pureWidget();
+        if (w->isValuePropertyInt()) {
+            w->setCurrentIntValue(widgetIntProperty(pureWidget, valueProperty));
+        } else if (w->isValuePropertyString()) {
+           w->setCurrentStringValue(widgetStringProperty(pureWidget, valueProperty));
+        }
+    }
+    
+    pure_unlock_interp(local);
+
+}
 void PureLink::initUI() {
     pure_expr* exceptions = nullptr;
     
@@ -280,67 +382,62 @@ void PureLink::initUI() {
 
     
     for (int i = 0; i < size; i++) {
-        pure_expr* widget = elems[i];
+        pure_expr* pureWidget = elems[i];
         
-        int type_tag = widgetIntProperty(widget, typeTagProperty);
-        pure_expr* action = widgetExprProperty(widget, actionProperty);
+        int type_tag = widgetIntProperty(pureWidget, typeTagProperty);
+        pure_expr* action = widgetExprProperty(pureWidget, actionProperty);
         switch (uiWidgetType(type_tag)) {
             case UIWidgetType::Slider: {
                 UIWidgetSlider* control = new UIWidgetSlider {};
-                control->code = widgetIntProperty(widget, codeProperty);
-                control->name = widgetStringProperty(widget, nameProperty);
-                control->value = widgetIntProperty(widget, valueProperty);
-                control->minimum = widgetIntProperty(widget, "ui::min");
-                control->maximum = widgetIntProperty(widget, "ui::max");
-                WidgetAction* widgetAction = new WidgetAction { control, action };
+                control->code = widgetIntProperty(pureWidget, codeProperty);
+                control->name = widgetStringProperty(pureWidget, nameProperty);
+                control->value = widgetIntProperty(pureWidget, valueProperty);
+                control->minimum = widgetIntProperty(pureWidget, "ui::min");
+                control->maximum = widgetIntProperty(pureWidget, "ui::max");
+                WidgetAction* widgetAction = new WidgetAction { control, pureWidget, action };
                 widgetMap.insert(std::map<int, WidgetAction*>::value_type(control->code, widgetAction));
-                widgetVector.push_back(control);
             }
                 break;
                 
             case UIWidgetType::Segmented: {
                 UIWidgetSegmented* control = new UIWidgetSegmented {};
-                control->code = widgetIntProperty(widget, codeProperty);
-                control->name = widgetStringProperty(widget, nameProperty);
-                control->value = widgetIntProperty(widget, valueProperty);
-                control->labels = widgetStringListProperty(widget, "ui::labels");
-                WidgetAction* widgetAction = new WidgetAction { control, action };
+                control->code = widgetIntProperty(pureWidget, codeProperty);
+                control->name = widgetStringProperty(pureWidget, nameProperty);
+                control->value = widgetIntProperty(pureWidget, valueProperty);
+                control->labels = widgetStringListProperty(pureWidget, "ui::labels");
+                WidgetAction* widgetAction = new WidgetAction { control, pureWidget, action };
                 widgetMap.insert(std::map<int, WidgetAction*>::value_type(control->code, widgetAction));
-                widgetVector.push_back(control);
             }
                 break;
                 
             case UIWidgetType::PopUp: {
                 UIWidgetPopUp* control = new UIWidgetPopUp {};
-                control->code = widgetIntProperty(widget, codeProperty);
-                control->name = widgetStringProperty(widget, nameProperty);
-                control->value = widgetIntProperty(widget, valueProperty);
-                control->labels = widgetStringListProperty(widget, "ui::labels");
-                WidgetAction* widgetAction = new WidgetAction { control, action };
+                control->code = widgetIntProperty(pureWidget, codeProperty);
+                control->name = widgetStringProperty(pureWidget, nameProperty);
+                control->value = widgetIntProperty(pureWidget, valueProperty);
+                control->labels = widgetStringListProperty(pureWidget, "ui::labels");
+                WidgetAction* widgetAction = new WidgetAction { control, pureWidget, action };
                 widgetMap.insert(std::map<int, WidgetAction*>::value_type(control->code, widgetAction));
-                widgetVector.push_back(control);
             }
                 break;
                 
             case UIWidgetType::CheckBox: {
                 UIWidgetCheckBox* control = new UIWidgetCheckBox {};
-                control->code = widgetIntProperty(widget, codeProperty);
-                control->name = widgetStringProperty(widget, nameProperty);
-                control->value = widgetIntProperty(widget, valueProperty);
-                WidgetAction* widgetAction = new WidgetAction { control, action };
+                control->code = widgetIntProperty(pureWidget, codeProperty);
+                control->name = widgetStringProperty(pureWidget, nameProperty);
+                control->value = widgetIntProperty(pureWidget, valueProperty);
+                WidgetAction* widgetAction = new WidgetAction { control, pureWidget, action };
                 widgetMap.insert(std::map<int, WidgetAction*>::value_type(control->code, widgetAction));
-                widgetVector.push_back(control);
             }
                 break;
             
             case UIWidgetType::Label: {
                 UIWidgetLabel* control = new UIWidgetLabel {};
-                control->code = widgetIntProperty(widget, codeProperty);
-                control->name = widgetStringProperty(widget, nameProperty);
-                control->value = widgetStringProperty(widget, valueProperty);
-                WidgetAction* widgetAction = new WidgetAction { control, action };
+                control->code = widgetIntProperty(pureWidget, codeProperty);
+                control->name = widgetStringProperty(pureWidget, nameProperty);
+                control->value = widgetStringProperty(pureWidget, valueProperty);
+                WidgetAction* widgetAction = new WidgetAction { control, pureWidget, action };
                 widgetMap.insert(std::map<int, WidgetAction*>::value_type(control->code, widgetAction));
-                widgetVector.push_back(control);
             }
                 break;
                 
@@ -356,22 +453,24 @@ void PureLink::initUI() {
         
 void PureLink::signal(int widgetCode, int newValue) {
     WidgetAction* wa = widgetMap[widgetCode];
-    if (debug) printf("Widget name: %s\n", wa->widget->name.c_str());
+    if (debug) printf("Widget name: %s\n", wa->widget()->name.c_str());
     Event e;
     e.uiEvent = UIEvent::UISignal;
     e.Change.code = widgetCode;
     e.Change.intValue = newValue;
+    wa->widget()->setCurrentIntValue(newValue);
     bus->publishAsync(e);
 }
         
         
 void PureLink::signal(int widgetCode, const std::string& newValue) {
     WidgetAction* wa = widgetMap[widgetCode];
-    if (debug) printf("Widget name: %s\n", wa->widget->name.c_str());
+    if (debug) printf("Widget name: %s\n", wa->widget()->name.c_str());
     Event e;
     e.uiEvent = UIEvent::UISignal;
     e.Change.code = widgetCode;
     e.Change.stringValue = newValue;
+    wa->widget()->setCurrentStringValue(newValue);
     bus->publishAsync(e);
 }
 
@@ -555,70 +654,93 @@ void PureLink::onEvent(const Event& event) {
             break;
     }
 }
-        
+
+
 void PureLink::onEditorWidgetChange(const Event& event) {
     std::lock_guard<std::mutex> lock(mutex);
     pure_interp* local = pure_lock_interp(interp);
     
     WidgetAction* wa = widgetMap[event.Change.code]; // can this fail?
-    
+    /*
     auto updateSlider = [&] {
-        UIWidgetSlider* control = static_cast<UIWidgetSlider*>(wa->widget);
+        UIWidgetSlider* control = static_cast<UIWidgetSlider*>(wa->widget());
         control->value = event.Change.intValue;
     };
     
     auto updateSegmented = [&] {
-        UIWidgetSegmented* control = static_cast<UIWidgetSegmented*>(wa->widget);
+        UIWidgetSegmented* control = static_cast<UIWidgetSegmented*>(wa->widget());
         control->value = event.Change.intValue;
     };
     
     auto updatePopUp = [&] {
-        UIWidgetPopUp* control = static_cast<UIWidgetPopUp*>(wa->widget);
+        UIWidgetPopUp* control = static_cast<UIWidgetPopUp*>(wa->widget());
         control->value = event.Change.intValue;
     };
     
     auto updateCheckBox = [&] {
-        UIWidgetCheckBox* control = static_cast<UIWidgetCheckBox*>(wa->widget);
+        UIWidgetCheckBox* control = static_cast<UIWidgetCheckBox*>(wa->widget());
         control->value = event.Change.intValue;
     };
     
     auto updateLabel = [&] {
-        UIWidgetLabel* control = static_cast<UIWidgetLabel*>(wa->widget);
+        UIWidgetLabel* control = static_cast<UIWidgetLabel*>(wa->widget());
         control->value = event.Change.stringValue;
     };
+    */
+    pure_expr* action = wa->action();
+    UIWidgetType wt = wa->widget()->widgetType;
+    pure_expr* newValue;
+    if (wa->widget()->isValuePropertyInt()) {
+        newValue = pure_int(event.Change.intValue);
+        wa->widget()->setCurrentIntValue(event.Change.intValue);
+    } else if (wa->widget()->isValuePropertyString()) {
+        newValue = pure_cstring_dup(event.Change.stringValue.c_str());
+        wa->widget()->setCurrentStringValue(event.Change.stringValue);
+    }
     
-    pure_expr* action = wa->action;
-    UIWidgetType wt = wa->widget->widgetType;
-    pure_expr* arg;
+    /*
     switch (wt) {
         case UIWidgetType::Slider:
-            arg = pure_int(event.Change.intValue);
+            newValue = pure_int(event.Change.intValue);
             updateSlider();
             break;
         case UIWidgetType::Segmented:
-            arg = pure_int(event.Change.intValue);
+            newValue = pure_int(event.Change.intValue);
             updateSegmented();
             break;
         case UIWidgetType::PopUp:
-            arg = pure_int(event.Change.intValue);
+            newValue = pure_int(event.Change.intValue);
             updatePopUp();
             break;
         case UIWidgetType::CheckBox:
-            arg = pure_int(event.Change.intValue);
+            newValue = pure_int(event.Change.intValue);
             updateCheckBox();
             break;
         case UIWidgetType::Label:
-            arg = pure_cstring_dup(event.Change.stringValue.c_str());
+            newValue = pure_cstring_dup(event.Change.stringValue.c_str());
             updateLabel();
             break;
         default:
             break;
             
     }
+     */
     
-    pure_expr* args[] = { arg };
+    // call ui::set_value then call the action
+    
+    pure_expr* setValueArgs[] = { wa->pureWidget(), newValue };
     pure_expr* exception = nullptr;
-    pure_appxv(action, 1, args, &exception);
+    int32_t setValueFSymbol = pure_getsym(setValueF.c_str());
+    pure_expr* sve = pure_symbol(setValueFSymbol);
+    if (sve) {
+        pure_appxv(sve, 2, setValueArgs, &exception);
+        if (exception) {
+            report("onEditorWidgetChange", exception);
+        }
+    }
+    
+    pure_expr* actionArgs[] = { newValue };
+    pure_appxv(action, 1, actionArgs, &exception);
     
     if (exception) {
         report("onEditorWidgetChange", exception);
@@ -641,6 +763,15 @@ bool PureLink::hasErrors() {
 const std::string PureLink::getFilename() {
     //std::lock_guard<std::mutex> lock(mutex);
     return filename;
+}
+        
+        
+const std::vector<UIWidget*> PureLink::getWidgets() {
+    std::vector<UIWidget*> widgets;
+    for(auto& e : widgetMap) {
+        widgets.push_back(e.second->widget());
+    }
+    return widgets;
 }
 
 const std::string PureLink::getErrors() {
@@ -694,7 +825,7 @@ void PureLink::report(std::string& message) {
 
 
 pure_expr* PureLink::createNoteOnMessage(int channel, int note, int velocity, int position) {
-    if (debug) printf("PureLink: createNoteOnMessage\n");
+    //if (debug) printf("PureLink: createNoteOnMessage\n");
     //pure_switch_interp(interp);
     pure_expr* cx = pure_int(channel);
     pure_expr* nx = pure_int(note);
@@ -703,23 +834,20 @@ pure_expr* PureLink::createNoteOnMessage(int channel, int note, int velocity, in
     int32_t noteMessageSymbol = pure_sym("noteOn");
     pure_expr* result = nullptr;
     if (noteMessageSymbol) {
-        try {
-            pure_expr* function = pure_symbol(noteMessageSymbol);
-            pure_expr* args[] = {cx,nx,vx,px};
-            result = pure_appv(function, 4, args);
-        } catch(...) {
-            printf("PureLink: createNoteOnMessage Exception\n");
-            //const char* e = lasterr();
-            //AlertWindow::showNativeDialogBox("Error", String(e), false);
+        pure_expr* function = pure_symbol(noteMessageSymbol);
+        pure_expr* args[] = {cx,nx,vx,px};
+        pure_expr* exception = nullptr;
+        result = pure_appxv(function, 4, args, &exception);
+        if (exception) {
+            report("createNoteOnMessage", exception);
         }
-        
     }
     
     return result;
 }
 
 pure_expr* PureLink::createNoteOffMessage(int channel, int note, int position) {
-    if (debug) printf("PureLink: createNoteOffMessage\n");
+    //if (debug) printf("PureLink: createNoteOffMessage\n");
     //pure_switch_interp(interp);
     pure_expr* cx = pure_int(channel);
     pure_expr* nx = pure_int(note);
@@ -727,21 +855,19 @@ pure_expr* PureLink::createNoteOffMessage(int channel, int note, int position) {
     int32_t noteMessageSymbol = pure_sym("noteOff");
     pure_expr* result = nullptr;
     if (noteMessageSymbol) {
-        try {
-            pure_expr* function = pure_symbol(noteMessageSymbol);
-            pure_expr* args[] = {cx,nx,px};
-            result = pure_appv(function, 3, args);
-        } catch(...) {
-            const char* e = lasterr();
-            AlertWindow::showNativeDialogBox("Error", String(e), false);
+        pure_expr* function = pure_symbol(noteMessageSymbol);
+        pure_expr* args[] = {cx,nx,px};
+        pure_expr* exception = nullptr;
+        result = pure_appxv(function, 3, args, &exception);
+        if (exception) {
+            report("createNoteOffMessage", exception);
         }
-        
     }
     return result;
 }
 
 bool PureLink::createMessageFrom(pure_expr* expr, MidiMessage& message, int& position) {
-    if (debug) printf("PureLink: createMessageFrom\n");
+    //if (debug) printf("PureLink: createMessageFrom\n");
     
     // The following reads a tuple on the form (word::int, position::int), where word is the midi message
     //pure_switch_interp(interp);
@@ -790,11 +916,6 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
     while (inputItr.getNextEvent(message, position)) {
         
         int size = message.getRawDataSize();
-        
-        if (logging && message.isMetaEvent()) {
-            int met = message.getMetaEventType();
-            log("Meta-Event", std::to_string(met));
-        }
         
         if (size > 0) {
             const uint8* data = message.getRawData();

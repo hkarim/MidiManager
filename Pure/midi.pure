@@ -44,7 +44,7 @@ is_note_on (e,p)                    = is_note_on e;
 is_note_on m::message_t             = is_note_on (event m);
 is_note_on event::int               = ( (event and 0xff) and 0xf0 ) == 0x90;
 
-is_note_off (e,p)                   = is_note_on e;
+is_note_off (e,p)                   = is_note_off e;
 is_note_off m::message_t            = is_note_off (event m);
 is_note_off event::int              = ( (event and 0xff) and 0xf0 ) == 0x80;
 
