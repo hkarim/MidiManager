@@ -11,13 +11,14 @@
 #include "NativeEditorController.h"
 
 
-JuceCocoa::JuceCocoa(MessageBus* bus) : EventListener(), bus(bus) {
+JuceCocoa::JuceCocoa(std::shared_ptr<MessageBus> bus) : EventListener(), bus(bus) {
     printf("JuceCocoa: %p\n", this);
     bus->addListener(this);
 }
 
 JuceCocoa::~JuceCocoa() {
     bus->removeListener(this);
+    printf("JuceCocoa %p freed\n", this);
 }
 
 void JuceCocoa::releaseController() {

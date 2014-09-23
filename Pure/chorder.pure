@@ -120,7 +120,6 @@ format_chords =
         leading_c;
   end;
 
-//change_chords = signal (ui::code chords_control) format_chords;
 change_chords = ui::send chords_control format_chords;
 
 
@@ -152,22 +151,22 @@ leading_chord     = ui::value leading_control;
 
 // UI Callback
 create_ui =
-  [
-    transposition_control,
-    base_note_control,
-    chords_control,
-    tonic_control,
-    supertonic_control,
-    mediant_control,
-    subdominant_control,
-    dominant_control,
-    submediant_control,
-    leading_control,
-    last_chord_control,
-    desc_control,
-    author_control
-  ];
-
+     [
+        transposition_control,
+        base_note_control,
+        chords_control,
+        tonic_control,
+        supertonic_control,
+        mediant_control,
+        subdominant_control,
+        dominant_control,
+        submediant_control,
+        leading_control,
+        last_chord_control,
+        desc_control,
+        author_control
+     ];
+  
 save_state =
   { 
     "transposition_control" => transposition,
@@ -181,23 +180,26 @@ save_state =
     "leading_control" => leading_chord
   };
 
-restore_state r::record = 
-  map set_state (keys r) with
+restore_state r::record =
+  restore_controls with
+    restore_controls = map set_state (keys r);
     set_state key =
-      case key of
-        "transposition_control" = ui::set_value transposition_control (r!key);
-        "base_note_control"     = ui::set_value base_note_control (r!key); 
-        "tonic_control"         = ui::set_value tonic_control (r!key);
-        "supertonic_control"    = ui::set_value supertonic_control (r!key);
-        "mediant_control"       = ui::set_value mediant_control (r!key);
-        "subdominant_control"   = ui::set_value subdominant_control (r!key);
-        "dominant_control"      = ui::set_value dominant_control (r!key);
-        "submediant_control"    = ui::set_value submediant_control (r!key);
-        "leading_control"       = ui::set_value leading_control (r!key);
-        _                       = puts $ "unkown property: " + key;
-      end;
+       case key of
+          "transposition_control" = ui::set_value transposition_control (r!key);
+          "base_note_control"     = ui::set_value base_note_control (r!key); 
+          "tonic_control"         = ui::set_value tonic_control (r!key);
+          "supertonic_control"    = ui::set_value supertonic_control (r!key);
+          "mediant_control"       = ui::set_value mediant_control (r!key);
+          "subdominant_control"   = ui::set_value subdominant_control (r!key);
+          "dominant_control"      = ui::set_value dominant_control (r!key);
+          "submediant_control"    = ui::set_value submediant_control (r!key);
+          "leading_control"       = ui::set_value leading_control (r!key);
+          _                       = puts $ "unkown property: " + key;
+       end;
   end;
 
+on_editor_loaded = puts "Editor Ready" $$ change_chords;
+  
   
 
 // Midi Processing
@@ -218,7 +220,7 @@ process t::event_position_t = if is_note_on_or_off t then chord_on_off (pick_int
 chord_name t::event_position_t =
   result with
     nor = ((get_note t) - transposition) mod 12;
-    name = scale ! nor;
+    name = scale ! ( (get_note t) mod 12 );
     result =
       case nor of
         0 = name + (tonic_keys ! tonic_chord);

@@ -17,9 +17,10 @@
 //==============================================================================
 MidiManagerAudioProcessor::MidiManagerAudioProcessor(): EventListener() {
     printf("MidiManagerAudioProcessor: %p\n", this);
-    bus = new MessageBus();
-    pureLink = nullptr;
-    juceCocoa = new JuceCocoa(bus);
+
+    bus = std::shared_ptr<MessageBus> { new MessageBus() };
+    pureLink = std::unique_ptr<PureLink> { nullptr };
+    juceCocoa = std::shared_ptr<JuceCocoa> { new JuceCocoa(bus) };
     bus->addListener(this);
     
 }
@@ -27,7 +28,7 @@ MidiManagerAudioProcessor::MidiManagerAudioProcessor(): EventListener() {
 MidiManagerAudioProcessor::~MidiManagerAudioProcessor()
 {
     bus->removeListener(this);
-    
+    /*
     if (juceCocoa) {
         delete juceCocoa;
     }
@@ -35,7 +36,9 @@ MidiManagerAudioProcessor::~MidiManagerAudioProcessor()
         delete pureLink;
     }
     delete bus;
+    */
     PureLink::callPureFinalize();
+    printf("MidiManagerAudioProcessor %p freed\n", this);
 }
 
 void MidiManagerAudioProcessor::onEvent(const Event& event) {
@@ -72,6 +75,7 @@ void MidiManagerAudioProcessor::restoreEditorState() {
             e.UI.widgets = widgets;
         }
         bus->publish(e);
+        pureLink->scriptEditorLoaded();
     }
     
     
@@ -86,10 +90,10 @@ void MidiManagerAudioProcessor::fileChosen(const Event& event) {
     
     {
         std::lock_guard<std::mutex> lock(pureLinkMutex);
+        
+        pureLink.reset(new PureLink(filename, bus));
     
-        if (pureLink) delete pureLink;
-    
-        pureLink = new PureLink(filename, bus);
+        //pureLink = new PureLink(filename, bus);
         
         restoreEditorState();
     }
@@ -256,10 +260,12 @@ void MidiManagerAudioProcessor::setStateInformation (const void* data, int sizeI
     if (filename.isString()) {
         std::string name = filename.toString().toStdString();
         //printf("MidiManagerAudioProcessor::setStateInformation: %s\n", name.c_str());
+        
         Event e;
         e.uiEvent = UIEvent::FileChosen;
         e.FileData.filename = name;
-        bus->publish(e);
+        //bus->publish(e);
+        fileChosen(e);
     }
     
     if (pureState.isString()) {

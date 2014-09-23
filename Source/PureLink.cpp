@@ -115,6 +115,7 @@ const std::string isMidiBufferTF     = "is_midi_buffer";
 const std::string createUIF          = "create_ui";
 const std::string saveStateF         = "save_state";
 const std::string restoreStateF      = "restore_state";
+const std::string onEditorLoadedF    = "on_editor_loaded";
 const std::string pureLinkVar        = "pure_link";
 const std::string messageBusVar      = "message_bus";
 
@@ -130,11 +131,7 @@ const std::string isWidgetF          = "ui::is_widget";
 
 
 
-
-
-
-
-PureLink::PureLink(const std::string& filename, MessageBus* bus) :
+PureLink::PureLink(const std::string& filename, std::shared_ptr<MessageBus> bus) :
 EventListener { }, bus { bus }, filename { filename } {
     printf("PureLink: %p\n", this);
     if (debug)
@@ -174,9 +171,10 @@ PureLink::~PureLink() {
     widgetMap.clear();
     
     if (debug) printf("deleting blocks\n");
-    
+    /*
     if (processMidiBuffer) pure_free(processMidiBuffer);
     if (createUI) pure_free(createUI);
+    if (pureLinkBinding) pure_free(pureLinkBinding);
     if (block) pure_free(block);
     pure_interp* defaultInstance = interpreter.defaultInstance;
     if (interp) {
@@ -184,8 +182,8 @@ PureLink::~PureLink() {
         pure_delete_interp(interp);
         pure_unlock_interp(local);
     }
-    
-    if (debug) printf("PureLink: destroyed\n");
+    */
+    printf("PureLink %p freed\n", this);
 }
 
 void PureLink::init() {
@@ -195,46 +193,47 @@ void PureLink::init() {
     }
 
     pure_interp* local;
-    interp = interpreter.createInterpreter(debug);
-    local = pure_lock_interp(interp);
-    if (debug) printf("Pure Interpreter: %p\n", (void*) interp);
+    interp.reset(interpreter.createInterpreter(debug));
+    local = pure_lock_interp(interp.get());
+    if (debug) printf("Pure Interpreter: %p\n", interp.get());
     pure_expr* evaluated = pure_eval(code.c_str());
     if (evaluated) {
-        block = pure_new(evaluated);
+        block.reset(pure_new(evaluated));
         
         
         int32_t processMidiBufferSymbol = pure_getsym(processMidiBufferF.c_str());
         if (processMidiBufferSymbol != 0 ) {
-            processMidiBuffer = pure_new(pure_symbol(processMidiBufferSymbol));
-            pure_interp_compile(interp, processMidiBufferSymbol);
+            processMidiBuffer.reset(pure_new(pure_symbol(processMidiBufferSymbol)));
+            pure_interp_compile(interp.get(), processMidiBufferSymbol);
         }
         
         int32_t createUISymbol = pure_getsym(createUIF.c_str());
         if (createUISymbol != 0 ) {
-            createUI = pure_new(pure_symbol(createUISymbol));
-            pure_interp_compile(interp, createUISymbol);
+            createUI.reset(pure_new(pure_symbol(createUISymbol)));
+            pure_interp_compile(interp.get(), createUISymbol);
             initUI();
         }
         
         // inject PureLink instance
         int32_t pureLinkInstanceSymbol = pure_sym(pureLinkVar.c_str());
         if (pureLinkInstanceSymbol) {
-            pure_expr* pointer = pure_new(pure_pointer((void*) this));
-            pure_let(pureLinkInstanceSymbol, pointer);
+            pureLinkBinding.reset(pure_new(pure_pointer((void*) this)));
+            pure_let(pureLinkInstanceSymbol, pureLinkBinding.get());
         }
         
         // inject MessageBus instance
+        /*
         int32_t messageBusInstanceSymbol = pure_sym(messageBusVar.c_str());
         if (messageBusInstanceSymbol) {
             pure_expr* pointer = pure_new(pure_pointer((void*) bus));
             pure_let(messageBusInstanceSymbol, pointer);
         }
+        */
         
     } else {
         if (debug) printf("Errors occured while evaluating script\n");
         pure_expr* pureerr = lasterrpos();
         const char* errstr = str(pureerr);
-        pure_free(pureerr);
         if (debug) printf("%s\n", errstr);
         
         errors = strdup(errstr);
@@ -249,7 +248,7 @@ const std::string PureLink::getState() {
     if (debug) printf("OnGetState: <PureLink %p>\n", this);
     
     std::lock_guard<std::mutex> lock(mutex);
-    pure_interp* local = pure_lock_interp(interp);
+    pure_interp* local = pure_lock_interp(interp.get());
     
     std::string state = "";
     
@@ -288,7 +287,7 @@ void PureLink::setState(const std::string& state) {
     if (debug) printf("Juce State sent: %s\n", state.c_str());
     
     std::lock_guard<std::mutex> lock(mutex);
-    pure_interp* local = pure_lock_interp(interp);
+    pure_interp* local = pure_lock_interp(interp.get());
     
     pure_expr* stateex = pure_eval(state.c_str());
     bool stateRestored = true;
@@ -308,7 +307,7 @@ void PureLink::setState(const std::string& state) {
                 }
             }
         }
-        pure_free(stateex);
+        //pure_free(stateex);
     }
     
     if (! stateRestored) {
@@ -336,10 +335,32 @@ void PureLink::setState(const std::string& state) {
     pure_unlock_interp(local);
 
 }
+        
+        
+void PureLink::scriptEditorLoaded() {
+    if (debug) printf("scriptEditorLoaded: <PureLink %p>\n", this);
+    
+    std::lock_guard<std::mutex> lock(mutex);
+    pure_interp* local = pure_lock_interp(interp.get());
+    
+    int32_t onEditorLoadedFSymbol = pure_getsym(onEditorLoadedF.c_str());
+    pure_expr* onEditorLoadedEx;
+    if (onEditorLoadedFSymbol != 0 ) {
+        onEditorLoadedEx = pure_symbol(onEditorLoadedFSymbol);
+        if (onEditorLoadedEx) {
+            pure_expr* exceptions = nullptr;
+            pure_appxv(onEditorLoadedEx, 0, nullptr, &exceptions);
+            if (exceptions) {
+                report("scriptEditorLoaded", exceptions);
+            }
+        }
+    }
+    pure_unlock_interp(local);
+}
 void PureLink::initUI() {
     pure_expr* exceptions = nullptr;
     
-    pure_expr* widgets = pure_appxv(createUI, 0, nullptr, &exceptions);
+    pure_expr* widgets = pure_appxv(createUI.get(), 0, nullptr, &exceptions);
     if (exceptions) {
         report("initUI", exceptions);
         return;
@@ -658,37 +679,11 @@ void PureLink::onEvent(const Event& event) {
 
 void PureLink::onEditorWidgetChange(const Event& event) {
     std::lock_guard<std::mutex> lock(mutex);
-    pure_interp* local = pure_lock_interp(interp);
+    pure_interp* local = pure_lock_interp(interp.get());
     
     WidgetAction* wa = widgetMap[event.Change.code]; // can this fail?
-    /*
-    auto updateSlider = [&] {
-        UIWidgetSlider* control = static_cast<UIWidgetSlider*>(wa->widget());
-        control->value = event.Change.intValue;
-    };
     
-    auto updateSegmented = [&] {
-        UIWidgetSegmented* control = static_cast<UIWidgetSegmented*>(wa->widget());
-        control->value = event.Change.intValue;
-    };
-    
-    auto updatePopUp = [&] {
-        UIWidgetPopUp* control = static_cast<UIWidgetPopUp*>(wa->widget());
-        control->value = event.Change.intValue;
-    };
-    
-    auto updateCheckBox = [&] {
-        UIWidgetCheckBox* control = static_cast<UIWidgetCheckBox*>(wa->widget());
-        control->value = event.Change.intValue;
-    };
-    
-    auto updateLabel = [&] {
-        UIWidgetLabel* control = static_cast<UIWidgetLabel*>(wa->widget());
-        control->value = event.Change.stringValue;
-    };
-    */
     pure_expr* action = wa->action();
-    UIWidgetType wt = wa->widget()->widgetType;
     pure_expr* newValue;
     if (wa->widget()->isValuePropertyInt()) {
         newValue = pure_int(event.Change.intValue);
@@ -698,33 +693,7 @@ void PureLink::onEditorWidgetChange(const Event& event) {
         wa->widget()->setCurrentStringValue(event.Change.stringValue);
     }
     
-    /*
-    switch (wt) {
-        case UIWidgetType::Slider:
-            newValue = pure_int(event.Change.intValue);
-            updateSlider();
-            break;
-        case UIWidgetType::Segmented:
-            newValue = pure_int(event.Change.intValue);
-            updateSegmented();
-            break;
-        case UIWidgetType::PopUp:
-            newValue = pure_int(event.Change.intValue);
-            updatePopUp();
-            break;
-        case UIWidgetType::CheckBox:
-            newValue = pure_int(event.Change.intValue);
-            updateCheckBox();
-            break;
-        case UIWidgetType::Label:
-            newValue = pure_cstring_dup(event.Change.stringValue.c_str());
-            updateLabel();
-            break;
-        default:
-            break;
-            
-    }
-     */
+    
     
     // call ui::set_value then call the action
     
@@ -904,7 +873,7 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
     
     if (!errors.empty()) return silenceOnErrors? MidiBuffer() : input;
 
-    pure_interp* local = pure_lock_interp(interp);
+    pure_interp* local = pure_lock_interp(interp.get());
     
     //if (debug) printf("PureLink: processBlock\n");
     
@@ -937,12 +906,12 @@ MidiBuffer PureLink::processBlock(MidiBuffer& input) {
     
     if (!v.empty()) {
         pure_expr** listargs = &v[0];
-        pure_expr* tail = pure_listl(0);
-        pure_expr* list = pure_listv2(v.size(), listargs, tail);
+        //pure_expr* tail = pure_listl(0);
+        pure_expr* list = pure_listv(v.size(), listargs);
         pure_expr* args[] = {list};
         if (processMidiBuffer) {
             pure_expr* exceptions = nullptr;
-            pure_expr* result = pure_appxv(processMidiBuffer, 1, args, &exceptions);
+            pure_expr* result = pure_appxv(processMidiBuffer.get(), 1, args, &exceptions);
             if (exceptions) {
                 report("processBlock", exceptions);
             } else {

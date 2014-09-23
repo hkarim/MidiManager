@@ -9,6 +9,7 @@
 #import "NativeEditorController.h"
 #import "NS(Attributed)String+Geometrics.h"
 #include <sstream>
+#include <memory>
 
 @interface NativeEditorController ()
 @property (assign) IBOutlet NSTextView *debugTextView;
@@ -18,7 +19,7 @@
 
 @implementation NativeEditorController
 
-__weak MessageBus* bus;
+/*__weak*/ std::shared_ptr<MessageBus> bus;
 
 
 
@@ -35,6 +36,7 @@ __weak MessageBus* bus;
 
     
     [super dealloc];
+    printf("NativeEditorController %p freed\n", self);
 }
 
 
@@ -183,7 +185,7 @@ __weak MessageBus* bus;
 
 
 
--(void) setMessageBus: (MessageBus*) encapsulatedMessageBus {
+-(void) setMessageBus: (std::shared_ptr<MessageBus>) encapsulatedMessageBus {
     bus = encapsulatedMessageBus;
     listener = new NativeEditorControllerListener(self, bus);
 }
@@ -305,7 +307,9 @@ __weak MessageBus* bus;
     CGFloat w = frame.size.width;
     CGFloat h = frame.size.height;
     
+    /*
     NSView* prevEditor = (EditorView*) [[self scrollView] documentView];
+    
     if (prevEditor) {
         [[self scrollView] setDocumentView:nil];
         NSArray* views = [prevEditor subviews];
@@ -314,6 +318,7 @@ __weak MessageBus* bus;
             [v release];
         }
     }
+    */
     
     EditorView* editor = [[EditorView alloc] initWithFrame:NSMakeRect(x, y, w, h)];
 

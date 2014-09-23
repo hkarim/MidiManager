@@ -16,6 +16,7 @@
 #include "PureLink.h"
 #include "JuceCocoa.h"
 #include "MessageBus.h"
+#include <memory>
 
 
 //==============================================================================
@@ -24,17 +25,17 @@
 class MidiManagerAudioProcessor  : public AudioProcessor, public EventListener
 {
 private:
-    MessageBus* bus;
-    JuceCocoa* juceCocoa;
-    PureLink* pureLink;
+    std::shared_ptr<MessageBus> bus;
+    std::shared_ptr<JuceCocoa> juceCocoa;
+    std::unique_ptr<PureLink> pureLink;
     std::mutex pureLinkMutex;
 public:
     //==============================================================================
     MidiManagerAudioProcessor();
     ~MidiManagerAudioProcessor();
-    MessageBus* getMessageBus() { return bus; }
-    JuceCocoa* getJuceCocoa() { return juceCocoa; }
-    PureLink* getPureLink() { return pureLink; }
+    std::shared_ptr<MessageBus> getMessageBus() { return bus; }
+    std::shared_ptr<JuceCocoa> getJuceCocoa() { return juceCocoa; }
+    //std::unique_ptr<PureLink> getPureLink() { return pureLink; }
     
     void onEvent(const Event& event);
     //==============================================================================

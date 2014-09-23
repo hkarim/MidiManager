@@ -173,6 +173,9 @@ private:
     void operator=(MessageBus const&) =delete; // Don't implement
 public:
     MessageBus() : listeners { }, pool { 8 } { }
+    ~MessageBus() {
+        printf("MessageBus %p freed\n", this);
+    }
     void addListener(EventListener* listener) {
         //printf("<MessageBus-%p> adding listener: %p\n", this, listener);
         listeners.push_back(listener);

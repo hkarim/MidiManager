@@ -17,6 +17,7 @@
 #include <vector>
 #include <pure/runtime.h>
 #include "MessageBus.h"
+#include <memory>
 
 
 
@@ -29,21 +30,41 @@ public:
     WidgetAction(UIWidget* widget, pure_expr* pureWidget, pure_expr* action) :
     _widget { widget }, _pureWidget { pureWidget } , _action { action } {}
     
+    
     UIWidget* widget() { return _widget; }
     pure_expr* pureWidget() { return _pureWidget; }
     pure_expr* action() { return _action; }
     
 };
 
+struct pure_expr_deleter {
+    void operator() (pure_expr* p) {
+        if (p) {
+            //printf("deleting pure expr\n");
+            pure_free(p);
+        }
+    }
+};
+
+struct pure_interp_deleter {
+    void operator() (pure_interp* interp) {
+        if (interp) {
+            //pure_interp* local = pure_lock_interp(defaultInstance);
+            pure_delete_interp(interp);
+            //pure_unlock_interp(local);
+        }
+    }
+};
 
 class PureLink : EventListener {
 private:
     std::mutex mutex;
-    MessageBus* bus;
-    pure_interp* interp = nullptr;
-    pure_expr* block = nullptr;
-    pure_expr* processMidiBuffer = nullptr;
-    pure_expr* createUI = nullptr;
+    std::shared_ptr<MessageBus> bus;
+    std::unique_ptr<pure_interp, pure_interp_deleter> interp;
+    std::unique_ptr<pure_expr, pure_expr_deleter> block;
+    std::unique_ptr<pure_expr, pure_expr_deleter> processMidiBuffer;
+    std::unique_ptr<pure_expr, pure_expr_deleter> createUI;
+    std::unique_ptr<pure_expr, pure_expr_deleter> pureLinkBinding;
     std::string filename;
     std::string code;
     std::string errors;
@@ -54,7 +75,7 @@ private:
     std::map<int, WidgetAction*> widgetMap;
 
 public:
-    PureLink(const std::string& filename, MessageBus* bus);
+    PureLink(const std::string& filename, std::shared_ptr<MessageBus> bus);
     ~PureLink();
     void onEvent(const Event& event);
     static void callPureFinalize();
@@ -74,6 +95,7 @@ public:
     void signal(int widgetCode, const std::string& newValue);
     const std::string getState();
     void setState(const std::string& state);
+    void scriptEditorLoaded();
 private:
     void init();
     pure_expr* createNoteOnMessage(int channel, int note, int velocity, int position);

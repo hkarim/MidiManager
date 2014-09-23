@@ -36,6 +36,7 @@ MidiManagerAudioProcessorEditor::~MidiManagerAudioProcessorEditor()
     MidiManagerAudioProcessor* processor = dynamic_cast<MidiManagerAudioProcessor*>(getAudioProcessor());
     bus->removeListener(this);
     processor->getJuceCocoa()->releaseController();
+    printf("MidiManagerAudioProcessorEditor %p freed\n", this);
 }
 
 void MidiManagerAudioProcessorEditor::resized() {

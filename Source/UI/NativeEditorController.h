@@ -11,6 +11,7 @@
 #include "MessageBus.h"
 #include <map>
 #include <mutex>
+#include <memory>
 
 class NativeEditorControllerListener;
 
@@ -30,7 +31,7 @@ class NativeEditorControllerListener;
 @property BOOL silenceOnErrors;
 
 
--(void) setMessageBus: (MessageBus*) encapsulatedMessageBus;
+-(void) setMessageBus: (std::shared_ptr<MessageBus>) encapsulatedMessageBus;
 
 -(void) editorLoaded;
 
@@ -46,15 +47,16 @@ class NativeEditorControllerListener;
 class NativeEditorControllerListener : public EventListener {
 private:
     NativeEditorController* controller;
-    MessageBus* bus;
+    std::shared_ptr<MessageBus> bus;
 public:
-    NativeEditorControllerListener(NativeEditorController* controller, MessageBus* bus) :
+    NativeEditorControllerListener(NativeEditorController* controller, std::shared_ptr<MessageBus> bus) :
     EventListener {}, controller { controller }, bus { bus } {
         printf("NativeEditorControllerListener: %p\n", this);
         bus->addListener(this);
     }
     ~NativeEditorControllerListener() {
         bus->removeListener(this);
+        printf("NativeEditorControllerListener %p freed\n", this);
     }
     void onEvent(const Event& event) {
         [controller onEvent: event];

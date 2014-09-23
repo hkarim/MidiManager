@@ -26,6 +26,11 @@
     return YES;
 }
 
+-(void) dealloc {
+    printf("EditorView %p freed\n", self);
+    [super dealloc];
+}
+
 @end
 
 @implementation EditorScrollView

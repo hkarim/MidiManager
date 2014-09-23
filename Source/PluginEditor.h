@@ -14,6 +14,7 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "PluginProcessor.h"
 #include "MessageBus.h"
+#include <memory>
 
 //==============================================================================
 /**
@@ -22,7 +23,7 @@ class MidiManagerAudioProcessorEditor  : public AudioProcessorEditor, public Eve
 {
 private:
     NSViewComponent nsviewComponent;
-    MessageBus* bus;
+    std::shared_ptr<MessageBus> bus;
     int currentWidth = 941;
     int currentHeight = 599;
     

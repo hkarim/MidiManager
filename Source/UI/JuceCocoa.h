@@ -10,14 +10,15 @@
 #define MidiManager_JuceCocoa_h
 #include "../JuceLibraryCode/JuceHeader.h"
 #include "MessageBus.h"
+#include <memory>
 
 class JuceCocoa : public EventListener {
 private:
     void* controller = nullptr;
     void* view = nullptr;
-    MessageBus* bus;
+    std::shared_ptr<MessageBus> bus;
 public:
-    JuceCocoa(MessageBus* bus);
+    JuceCocoa(std::shared_ptr<MessageBus> bus);
     ~JuceCocoa();
     void* createNSView();
     void onEvent(const Event& event);
