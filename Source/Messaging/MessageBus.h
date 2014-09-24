@@ -7,6 +7,7 @@
 //
 
 #include <vector>
+#include <list>
 #include <string>
 #include <mutex>
 #include "ThreadPool.h"
@@ -167,7 +168,7 @@ public:
 
 class MessageBus {
 private:
-    std::vector<EventListener*> listeners;
+    std::list<EventListener*> listeners;
     tp::ThreadPool pool;
     MessageBus(MessageBus const&) =delete;     // Don't Implement
     void operator=(MessageBus const&) =delete; // Don't implement
@@ -184,31 +185,25 @@ public:
     
     void removeListener(EventListener* listener) {
         //printf("<MessageBus-%p> removing listener: %p\n", this, listener);
-        auto itr = std::find(listeners.begin(), listeners.end(), listener);
-        listeners.erase(itr);
+        listeners.erase(std::remove(listeners.begin(), listeners.end(), listener), listeners.end());
         //printf("<MessageBus-%p> current size: %lu\n", this, listeners.size());
     }
     
     void publish(const Event& event) {
         //printf("<MessageBus-%p> publishing event, listeners size = %lu\n", this, listeners.size());
-        /*
+        
         for (auto& l : listeners) {
             printf("<MessageBus-%p> invoking listener: %p\n", this, l);
             l->onEvent(event);
         }
-         */
         
-        for (int i = 0; i < listeners.size(); i++) {
-            //printf("<MessageBus-%p> invoking listener: %p\n", this, listeners[i]);
-            listeners[i]->onEvent(event);
-        }
     }
     
     void publishAsync(const Event& event) {
         //printf("<MessageBus-%p> async publishing event, listeners size = %lu\n", this, listeners.size());
         for (auto& l : listeners) {
             //printf("<MessageBus-%p> async invoking listener: %p\n", this, l);
-            pool.enqueue([=](Event e) { l->onEvent(e); }, event);
+            pool.enqueue([&](Event e) { l->onEvent(e); }, event);
         }
     }
     
